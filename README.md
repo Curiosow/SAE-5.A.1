@@ -1,5 +1,9 @@
 # SAE-5.A.1
 
+## Requirement
+
+To do anything with the project, **you need to enter in the sub-folder**, the main folder is only for using readme and others files.
+
 ## Setup
 
 Make sure to install the dependencies:

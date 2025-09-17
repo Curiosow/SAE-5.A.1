@@ -12,8 +12,8 @@ useHead({
 
 <template>
   <div>
-    <navbar/>
+    <Navbar/>
     <NuxtPage />
-    <footer/>
+    <Footer/>
   </div>
 </template>

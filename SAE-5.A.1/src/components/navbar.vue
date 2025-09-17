@@ -30,10 +30,7 @@ const navItems = [
     <!-- Barrette “verre liquide” -->
     <div
         class="liquid-glass mx-auto mt-3 w-[min(94%,1200px)] rounded-2xl px-4 sm:px-6"
-        :class="[
-        // intensifie l’effet au scroll (plus d’opacité, bague plus nette)
-        scrolled ? 'glass-scrolled' : 'glass-top'
-      ]"
+        :class="scrolled ? 'glass-scrolled' : 'glass-top'"
         role="navigation"
         aria-label="Global"
     >
@@ -60,21 +57,24 @@ const navItems = [
         </div>
 
         <!-- Desktop nav -->
-        <div class="hidden lg:flex items-center gap-8">
+        <div class="hidden lg:flex items-center gap-3">
           <a
               v-for="item in navItems"
               :key="item.label"
               :href="item.href"
-              class="glass-hover relative text-sm font-medium text-white/90 hover:text-white transition-colors px-2 py-1 rounded-lg"
+              class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
           >
-            {{ item.label }}
+            <span class="relative z-[1]">{{ item.label }}</span>
           </a>
         </div>
 
         <!-- Actions -->
         <div class="hidden lg:flex min-w-0 flex-1 justify-end items-center gap-3">
-          <a href="#" class="text-sm font-semibold text-white/90 hover:text-white transition-colors">
-            Connexion
+          <a
+              href="#"
+              class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
+          >
+            <span class="relative z-[1]">Connexion</span>
           </a>
           <a
               href="#"
@@ -149,14 +149,15 @@ const navItems = [
           </button>
         </div>
 
-        <div class="mt-8 space-y-1">
+        <div class="mt-8 space-y-2">
           <a
               v-for="item in navItems"
               :key="item.label"
               :href="item.href"
-              class="glass-hover relative text-sm font-medium text-white/90 hover:text-white transition-colors px-2 py-1 rounded-lg"
+              class="seg-link block relative text-base font-medium text-white/90 transition-colors px-4 py-2 rounded-full w-full"
+              @click="open = false"
           >
-            {{ item.label }}
+            <span class="relative z-[1]">{{ item.label }}</span>
           </a>
         </div>
 
@@ -179,31 +180,29 @@ const navItems = [
 </template>
 
 <style scoped>
-/* Base “liquid glass” */
+/* Base “liquid glass” de la barre */
 .liquid-glass {
   position: relative;
-  background: rgba(20, 20, 22, 0.18);            /* couche sombre translucide pour fond dark */
-  backdrop-filter: blur(18px) saturate(120%);     /* flou + saturation douce */
+  background: rgba(20, 20, 22, 0.18);
+  backdrop-filter: blur(18px) saturate(120%);
   -webkit-backdrop-filter: blur(18px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.12);   /* bague externe subtile */
+  border: 1px solid rgba(255, 255, 255, 0.12);
   box-shadow:
       0 8px 24px rgba(0, 0, 0, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);     /* liseré interne haut */
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
 }
 
-/* Sur le haut de page : un peu plus “éthéré” */
 .glass-top {
   background: rgba(20, 20, 22, 0.14);
   border-color: rgba(255, 255, 255, 0.10);
 }
 
-/* Après scroll : plus lisible, légèrement plus opaque et nette */
 .glass-scrolled {
   background: rgba(20, 20, 22, 0.22);
   border-color: rgba(255, 255, 255, 0.14);
 }
 
-/* Highlight glossy doux en haut (façon Apple) */
+/* Highlight glossy sur la barre */
 .liquid-glass::before {
   content: "";
   position: absolute;
@@ -221,34 +220,64 @@ const navItems = [
   pointer-events: none;
 }
 
-/* Grain très léger pour casser les aplats (subtil) */
+/* Grain très léger */
 .liquid-glass::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background-image:
-      radial-gradient(rgba(255,255,255,0.06) 0.5px, transparent 0.6px);
+  background-image: radial-gradient(rgba(255,255,255,0.06) 0.5px, transparent 0.6px);
   background-size: 12px 12px;
   opacity: 0.25;
   mix-blend-mode: overlay;
   pointer-events: none;
 }
 
-.glass-hover::before {
-  content: "";
-  position: absolute;
-  inset: -4px;
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  z-index: -1;
+/* ========= PASTILLE "LIQUID GLASS" SUR LES LIENS (façon Apple) ========= */
+.seg-link {
+  position: relative;
+  border-radius: 9999px;
+  transition: color .25s ease, transform .25s ease;
 }
 
-.glass-hover:hover::before {
+/* Pastille inactive (invisible) — on prépare la zone de blur sans teinte visible */
+.seg-link::before {
+  content: "";
+  position: absolute;
+  inset: -2px;                 /* léger débord pour souligner le contour */
+  border-radius: inherit;
+
+  /* ⚠️ Clé du rendu “liquid”: blur + saturate, pas de gris par-dessus */
+  background: rgba(255, 255, 255, 0.01);          /* alpha minimale pour activer le backdrop */
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+
+  /* Bordure & relief très subtils, sans teinter l’intérieur */
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.18),     /* léger liseré interne haut */
+      0 4px 16px rgba(0, 0, 0, 0.30);
+
+  opacity: 0;
+  transform: translateZ(0) scale(0.98);
+  transition: opacity .25s ease, transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+  z-index: 0;
+}
+
+/* On retire totalement le voile gris/gradient précédent */
+.seg-link::after { content: none; }
+
+.seg-link:hover::before {
   opacity: 1;
+  transform: translateZ(0) scale(1);
+  border-color: rgba(255, 255, 255, 0.22);
+  box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.22),
+      0 6px 22px rgba(0, 0, 0, 0.35);
+}
+
+/* Optionnel : micro-levée au hover */
+@media (hover: hover) and (pointer: fine) {
+  .seg-link:hover { transform: translateY(-0.5px); }
 }
 </style>

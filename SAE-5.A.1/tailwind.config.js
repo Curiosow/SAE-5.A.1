@@ -23,6 +23,7 @@ module.exports = {
                     800: '#9d174d',
                     900: '#831843',
                 },
+                appleYellow: '#ffd60a', // teinte dorée façon Apple (mode Photo)
             },
             animation: {
                 // LUEURS
@@ -37,8 +38,7 @@ module.exports = {
                 twinkle: 'twinkle 3s ease-in-out infinite',
             },
             keyframes: {
-                /* Déplacement des lueurs : on anime le transform
-                   (plus fiable que background-position sur radial-gradient) */
+                /* Déplacement des lueurs : on anime le transform */
                 moveLight1: {
                     '0%': { transform: 'translate(0%, 0%) scale(1)' },
                     '50%': { transform: 'translate(18%, 26%) scale(1.05)' },

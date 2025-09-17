@@ -1,5 +1,49 @@
 <template>
-  <main class="min-h-screen relative overflow-hidden bg-rose-100">
+
+
+  <!-- PREMIER SET DE BOX -->
+  <div class="absolute inset-x-0 z-20 flex items-center justify-center w-full px-6 top-[30%] -translate-y-1/2">
+    <div class="w-full max-w-[1400px] mx-auto">
+      <div class="flex items-center justify-center gap-3 group">
+        <!-- BOX 1 -->
+        <div class="flex-1 min-w-0 max-w-[700px] p-16 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
+                  transition-all duration-300 ease-in-out group-hover:flex-[0.8] hover:flex-[1.2] hover:scale-[1.01]">
+          <h2 class="text-2xl font-semibold text-white text-center mb-10">parle pas de</h2>
+          <p class="text-white/90 text-center">1</p>
+        </div>
+        <!-- BOX 2 -->
+        <div class="flex-1 min-w-0 max-w-[700px] p-16 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
+                  transition-all duration-300 ease-in-out group-hover:flex-[0.8] hover:flex-[1.2] hover:scale-[1.01]">
+          <h2 class="text-2xl font-semibold text-white text-center mb-10">messi</h2>
+          <p class="text-white/90 text-center">2</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEUXIÈME SET DE BOX -->
+  <div class="absolute inset-x-0 z-10 flex items-center justify-center w-full px-6 top-[59%] -translate-y-1/2">
+    <div class="w-full max-w-[1400px] mx-auto">
+      <div class="flex items-center justify-center gap-3 group">
+        <!-- BOX 3 -->
+        <div class="flex-1 min-w-0 max-w-[700px] p-16 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
+                  transition-all duration-300 ease-in-out group-hover:flex-[0.8] hover:flex-[1.2] hover:scale-[1.01]">
+          <h2 class="text-2xl font-semibold text-white text-center mb-10">box 3</h2>
+          <p class="text-white/90 text-center">3</p>
+        </div>
+        <!-- BOX 4 -->
+        <div class="flex-1 min-w-0 max-w-[700px] p-16 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
+                  transition-all duration-300 ease-in-out group-hover:flex-[0.8] hover:flex-[1.2] hover:scale-[1.01]">
+          <h2 class="text-2xl font-semibold text-white text-center mb-10">box 4</h2>
+          <p class="text-white/90 text-center">4</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <main class="min-h-screen relative overflow-hidden bg-gray-300">
     <!-- LUEURS ROSES ANIMÉES -->
     <div
         class="pointer-events-none fixed inset-0 z-0 animate-light1 will-change-transform"

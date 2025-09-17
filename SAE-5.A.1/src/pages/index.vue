@@ -1,5 +1,5 @@
 <template>
-  <main class="min-h-screen relative overflow-hidden bg-gray-300">
+  <main class="min-h-screen relative overflow-hidden bg-rose-100">
     <!-- LUEURS ROSES ANIMÉES -->
     <div
         class="pointer-events-none fixed inset-0 z-0 animate-light1 will-change-transform"

@@ -4,7 +4,7 @@
 
 <template>
   <span class="w-full py-4 bg-pink/100 backdrop-blur-md backdrop-saturate-180 rounded-t-2xl shadow-lg text-center text-gray-900 font-medium fixed bottom-0 left-0 z-50">
-    © 2024 Votre Société. Tous droits réservés.
+    © 2025 Sambre Avesnois HandBall. Tous droits réservés.
   </span>
 </template>
 

@@ -21,7 +21,7 @@ const navItems = [
   { label: 'Accueil',    href: '/' },
   { label: 'Joueuses',   href: '/joueuses' },
   { label: 'Stats Équipe', href: '/stats' },
-  { label: 'Heatmaps',   href: '/heatmaps' },
+  { label: 'Heatmaps',   href: '/heatmap' },
 ]
 </script>
 

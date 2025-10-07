@@ -1,139 +1,352 @@
 <template>
+  <!-- on suppose que ta navbar est au-dessus, inchangée -->
+  <main class="min-h-screen bg-[#F7F7FB]">
+    <div class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 pt-24 pb-16">
 
+      <!-- ===== LIGNE 1 : en-tête équipe + prochain match ===== -->
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+        <!-- Carte équipe -->
+        <section class="card p-6 sm:p-8">
+          <div class="flex items-start gap-4">
+            <div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-rose-400 to-violet-500 text-white grid place-items-center text-xl font-semibold shadow-[0_6px_16px_rgba(168,85,247,0.35)]">
+              A
+            </div>
+            <div class="min-w-0">
+              <h1 class="text-[20px] sm:text-[22px] font-semibold text-[#5B21B6]">Equipe Avesnois</h1>
+              <p class="text-[13px] text-gray-500">Maubeuge, France</p>
+            </div>
+          </div>
 
-  <!-- PREMIER SET DE BOX -->
-  <div class="absolute inset-x-0 z-20 flex items-center justify-center w-full px-6 top-[30%] -translate-y-1/2">
-    <div class="w-full max-w-[1400px] mx-auto">
-      <div class="flex items-center justify-center gap-3 group">
-        <!-- BOX 1 -->
-        <div class="flex-1 min-w-0 max-w-[700px] p-16 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
-                  transition-all duration-300 ease-in-out group-hover:flex-[0.8] hover:flex-[1.2] hover:scale-[1.01]">
-          <h2 class="text-2xl font-semibold text-white text-center mb-10">parle pas de</h2>
-          <p class="text-white/90 text-center">1</p>
+          <div class="mt-6 grid grid-cols-4 gap-3">
+            <div class="stat-chip">
+              <span class="text-emerald-600 text-[22px] font-semibold leading-none">{{ summary.wins }}</span>
+              <span class="text-[11px] text-gray-500">Victoires</span>
+            </div>
+            <div class="stat-chip">
+              <span class="text-amber-500 text-[22px] font-semibold leading-none">{{ summary.draws }}</span>
+              <span class="text-[11px] text-gray-500">Égalités / Nulles</span>
+            </div>
+            <div class="stat-chip">
+              <span class="text-rose-500 text-[22px] font-semibold leading-none">{{ summary.losses }}</span>
+              <span class="text-[11px] text-gray-500">Défaites</span>
+            </div>
+            <div class="stat-chip">
+              <span class="text-gray-900 text-[22px] font-semibold leading-none">{{ summary.points }}</span>
+              <span class="text-[11px] text-gray-500">Points</span>
+            </div>
+          </div>
+
+          <div class="mt-6 flex flex-wrap items-center justify-between">
+            <div class="text-[12px]">
+              <div class="text-gray-500">Position dans la ligue</div>
+              <div class="font-semibold text-gray-900">#{{ summary.rank }}</div>
+            </div>
+            <div class="text-[12px] text-gray-500">
+              Série : <span class="text-gray-900 font-medium">{{ summary.form }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Prochain match -->
+        <aside class="card p-6">
+          <h2 class="font-semibold text-gray-900">Prochain match</h2>
+
+          <div v-if="nextMatch" class="mt-4 flex items-center gap-3">
+            <img :src="nextMatch.logo" alt="" class="h-10 w-10 rounded-xl object-cover"/>
+            <div class="min-w-0">
+              <p class="text-sm font-medium text-gray-900 truncate">{{ nextMatch.opponent }}</p>
+              <p class="text-xs text-gray-500">{{ nextMatch.date }} — {{ nextMatch.venue }}</p>
+            </div>
+          </div>
+          <p v-else class="mt-4 text-sm text-gray-500">Aucun match à venir</p>
+
+          <button class="mt-6 w-full btn-gradient">Détails</button>
+        </aside>
+      </div>
+
+      <!-- ===== Titre section KPI ===== -->
+      <h3 class="mt-10 section-title">Performance d’équipe</h3>
+
+      <!-- ===== LIGNE 2 : 4 KPI ===== -->
+      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- KPI 1 -->
+        <div class="kpi-card">
+          <div class="kpi-head">
+            <span>Buts marqués</span>
+            <svg class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 8.5h.01M11 11h2v5h-2z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="kpi-value">{{ kpis.goals }}</div>
+          <div class="kpi-trend up">+{{ kpis.trendGoals }}%</div>
         </div>
-        <!-- BOX 2 -->
-        <div class="flex-1 min-w-0 max-w-[700px] p-16 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
-                  transition-all duration-300 ease-in-out group-hover:flex-[0.8] hover:flex-[1.2] hover:scale-[1.01]">
-          <h2 class="text-2xl font-semibold text-white text-center mb-10">messi</h2>
-          <p class="text-white/90 text-center">2</p>
+
+        <!-- KPI 2 -->
+        <div class="kpi-card">
+          <div class="kpi-head">
+            <span>Précision de tir</span>
+            <svg class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 8.5h.01M11 11h2v5h-2z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="kpi-value text-rose-600">{{ kpis.shotAccuracy }}%</div>
+          <div class="kpi-trend down">-{{ kpis.trendShot }}%</div>
+        </div>
+
+        <!-- KPI 3 -->
+        <div class="kpi-card">
+          <div class="kpi-head">
+            <span>Buts concédés</span>
+            <svg class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 8.5h.01M11 11h2v5h-2z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="kpi-value">{{ kpis.goalsAgainst }}</div>
+          <div class="kpi-trend down">-{{ kpis.trendAgainst }}%</div>
+        </div>
+
+        <!-- KPI 4 -->
+        <div class="kpi-card">
+          <div class="kpi-head">
+            <span>Contre‑attaques</span>
+            <svg class="h-4 w-4 text-gray-300" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M12 8.5h.01M11 11h2v5h-2z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="kpi-value">{{ kpis.counters }}</div>
+          <div class="kpi-trend up">+{{ kpis.trendCounters }}%</div>
         </div>
       </div>
-    </div>
-  </div>
 
-  <!-- DEUXIÈME SET DE BOX -->
-  <div class="absolute inset-x-0 z-10 flex items-center justify-center w-full px-6 top-[59%] -translate-y-1/2">
-    <div class="w-full max-w-[1400px] mx-auto">
-      <div class="flex items-center justify-center gap-3 group">
-        <!-- BOX 3 -->
-        <div class="flex-1 min-w-0 max-w-[700px] p-16 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
-                  transition-all duration-300 ease-in-out group-hover:flex-[0.8] hover:flex-[1.2] hover:scale-[1.01]">
-          <h2 class="text-2xl font-semibold text-white text-center mb-10">box 3</h2>
-          <p class="text-white/90 text-center">3</p>
-        </div>
-        <!-- BOX 4 -->
-        <div class="flex-1 min-w-0 max-w-[700px] p-16 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
-                  transition-all duration-300 ease-in-out group-hover:flex-[0.8] hover:flex-[1.2] hover:scale-[1.01]">
-          <h2 class="text-2xl font-semibold text-white text-center mb-10">box 4</h2>
-          <p class="text-white/90 text-center">4</p>
-        </div>
+      <!-- ===== LIGNE 3 : placeholder graph + meilleures joueuses ===== -->
+      <div class="mt-6 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+        <section class="card p-6 sm:p-8 h-[260px]">
+          <h4 class="text-sm font-semibold text-gray-900">Performance de la saison</h4>
+          <div class="mt-4 h-[180px] grid place-items-center text-gray-400 text-sm">
+            Aucune statistique
+          </div>
+        </section>
+
+        <aside class="card p-6">
+          <h4 class="text-sm font-semibold text-gray-900">Meilleures joueuses</h4>
+          <ul class="mt-4 space-y-3">
+            <li v-for="(p, i) in topPlayers" :key="p.id" class="flex items-center justify-between">
+              <div class="flex items-center gap-3 min-w-0">
+                <img :src="p.avatar" alt="" class="h-9 w-9 rounded-full object-cover"/>
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium text-gray-900">Joueuse {{ i + 1 }}</p>
+                  <p class="text-xs text-gray-500">{{ p.stat }}</p>
+                </div>
+              </div>
+              <span class="text-rose-600 text-sm font-semibold">{{ p.accuracy }}%</span>
+            </li>
+          </ul>
+        </aside>
       </div>
+
+      <!-- ===== LIGNE 4 : formation + stats match ===== -->
+      <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <section class="card p-6 sm:p-8">
+          <h4 class="text-sm font-semibold text-gray-900">Formation d’équipe</h4>
+          <div class="mt-6 relative h-[240px]">
+            <div
+                v-for="(p, idx) in bubblePos"
+                :key="idx"
+                class="absolute h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gradient-to-br from-rose-400 to-violet-500 shadow-[0_8px_18px_rgba(168,85,247,0.28)] grid place-items-center text-white text-sm font-medium"
+                :style="p"
+            >
+              {{ dots[idx] }}
+            </div>
+            <div class="absolute bottom-0 left-0 text-[11px] text-gray-500 flex items-center gap-4">
+              <span class="inline-flex items-center gap-1">
+                <span class="inline-block h-2 w-2 rounded-full bg-rose-500"></span> Joueuses de champ
+              </span>
+              <span class="inline-flex items-center gap-1">
+                <span class="inline-block h-2 w-2 rounded-full bg-violet-500"></span> Gardienne
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <section class="card p-6 sm:p-8">
+          <h4 class="text-sm font-semibold text-gray-900">Statistiques de match</h4>
+          <div class="mt-6 space-y-4">
+            <div v-for="row in progressRows" :key="row.label" class="space-y-1">
+              <div class="flex items-center justify-between text-sm">
+                <span class="text-gray-700">{{ row.label }}</span>
+                <span class="font-medium text-gray-900">{{ row.value }}%</span>
+              </div>
+              <div class="h-2 w-full rounded-full bg-gray-100 overflow-hidden">
+                <div
+                    class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500"
+                    :style="{ width: row.value + '%' }"
+                />
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ===== LIGNE 5 : classement ===== -->
+      <section class="mt-8 card p-4 sm:p-6">
+        <h4 class="text-sm font-semibold text-gray-900 mb-4">Classement de la ligue Butaz</h4>
+        <div class="overflow-x-auto">
+          <table class="min-w-full text-sm">
+            <thead>
+            <tr class="text-left text-gray-500">
+              <th class="py-2 pr-3 w-16">Pos.</th>
+              <th class="py-2 pr-3">Équipe</th>
+              <th class="py-2 pr-3 w-12 text-center">V</th>
+              <th class="py-2 pr-3 w-12 text-center">E</th>
+              <th class="py-2 pr-3 w-12 text-center">D</th>
+              <th class="py-2 pr-3 w-16 text-center">PTS</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(t, i) in table" :key="t.name" class="border-t border-gray-100">
+              <td class="py-3 pr-3">
+                  <span
+                      class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold"
+                      :class="[
+                      i === 0 ? 'bg-amber-100 text-amber-700' :
+                      i === 1 ? 'bg-gray-100 text-gray-700'  :
+                      i === 2 ? 'bg-rose-100 text-rose-700'  : 'bg-gray-50 text-gray-600'
+                    ]"
+                  >{{ i + 1 }}</span>
+              </td>
+              <td class="py-3 pr-3">
+                <div class="flex items-center gap-2">
+                  <img :src="t.logo" alt="" class="h-6 w-6 rounded"/>
+                  <span class="text-gray-800 font-medium">{{ t.name }}</span>
+                </div>
+              </td>
+              <td class="py-3 pr-3 text-center">{{ t.w }}</td>
+              <td class="py-3 pr-3 text-center">{{ t.d }}</td>
+              <td class="py-3 pr-3 text-center">{{ t.l }}</td>
+              <td class="py-3 pr-3 text-center font-semibold text-gray-900">{{ t.pts }}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
     </div>
-  </div>
-
-
-
-  <main class="min-h-screen relative overflow-hidden bg-gray-300">
-    <!-- LUEURS ROSES ANIMÉES -->
-    <div
-        class="pointer-events-none fixed inset-0 z-0 animate-light1 will-change-transform"
-        style="background: radial-gradient(ellipse at 70% 10%, #ec4899 0%, transparent 70%); filter: blur(120px); opacity: 0.35; mix-blend: screen;"
-    />
-    <div
-        class="pointer-events-none fixed inset-0 z-0 animate-light2 will-change-transform"
-        style="background: radial-gradient(ellipse at 20% 80%, #ec4899 0%, transparent 70%); filter: blur(140px); opacity: 0.25; mix-blend: screen;"
-    />
-    <div
-        class="pointer-events-none fixed inset-0 z-0 animate-light3 will-change-transform"
-        style="background: radial-gradient(ellipse at 50% 50%, #ec4899 0%, transparent 70%); filter: blur(100px); opacity: 0.18; mix-blend: screen;"
-    />
-
-    <!-- PARTICULES FINES ANIMÉES -->
-    <div
-        v-for="n in PARTICLE_COUNT"
-        :key="n"
-        class="pointer-events-none fixed z-10 rounded-full bg-white will-change-transform"
-        :class="[
-        // tailles aléatoires légères pour la profondeur
-        n % 7 === 0 ? 'w-[3px] h-[3px]' : 'w-[2px] h-[2px]',
-        // positions de départ
-        positions[(n - 1) % positions.length],
-        // variantes d'animations pour éviter l'effet trop uniforme
-        animations[n % animations.length],
-        // scintillement occasionnel
-        n % 4 === 0 ? 'animate-twinkle' : '',
-        // légère transparence
-        'opacity-70'
-      ]"
-        :style="{
-        // décalage de départ pour désynchroniser les cycles
-        animationDelay: `${(n % 5) * 1.2}s`,
-        // petite variation de vitesse
-        animationDuration: `${8 + (n % 5) * 0.8}s`,
-        // un soupçon de flou pour certaines particules
-        filter: n % 6 === 0 ? 'blur(0.4px)' : 'none'
-      }"
-    />
   </main>
 </template>
 
 <script setup lang="ts">
-/**
- * Particules : on place quelques ancres réutilisables sur le viewport
- * pour couvrir suffisamment la page (les particules sont fixed).
- */
-const PARTICLE_COUNT = 36
+/* Données mock pour reproduire fidèlement le screen */
+const summary = {
+  wins: 12, draws: 3, losses: 1, points: 39, rank: 1, form: 'V‑V‑N‑V‑V'
+}
 
-const positions = [
-  'top-10 left-10',
-  'top-20 left-1/3',
-  'top-1/2 left-1/4',
-  'top-1/3 left-1/2',
-  'top-2/3 left-1/5',
-  'top-1/4 left-3/4',
-  'top-3/4 left-1/6',
-  'top-1/5 left-2/3',
-  'top-2/5 left-1/2',
-  'top-3/5 left-1/3',
-  'top-4/5 left-1/4',
-  'top-1/6 left-3/5',
-  'top-5/6 left-1/2',
-  'top-1/7 left-2/5',
-  'top-2/7 left-3/4',
-  'top-3/7 left-1/3',
-  'top-4/7 left-1/2',
-  'top-5/7 left-1/4',
-  'top-6/7 left-1/5',
-  'top-1/8 left-1/6',
-  // densité supplémentaire
-  'top-[12%] left-[78%]',
-  'top-[28%] left-[12%]',
-  'top-[46%] left-[66%]',
-  'top-[72%] left-[28%]',
-  'top-[84%] left-[54%]',
-  'top-[38%] left-[84%]',
+const nextMatch = null as null | {
+  opponent: string; date: string; venue: string; logo: string
+}
+// exemple si besoin :
+// const nextMatch = { opponent: 'Paris 92', date: 'Sam. 28 sept • 20:30', venue: 'Domicile', logo: 'https://placehold.co/64x64' }
+
+const kpis = {
+  goals: 485, trendGoals: 12.5,
+  shotAccuracy: 68.4, trendShot: 3.2,
+  goalsAgainst: 325, trendAgainst: 2.1,
+  counters: 89, trendCounters: 8.7
+}
+
+const topPlayers = [
+  { id: 1, avatar: 'https://placehold.co/64x64', stat: '45 buts', accuracy: 78.5 },
+  { id: 2, avatar: 'https://placehold.co/64x64', stat: '8 assistances', accuracy: 0 },
+  { id: 3, avatar: 'https://placehold.co/64x64', stat: '38 buts', accuracy: 82.3 },
 ]
 
-/**
- * Variantes d’animations pour des mouvements organiques.
- * (définies dans tailwind.config.js)
- */
-const animations = ['animate-float1', 'animate-float2', 'animate-float3']
+/* Formation : emplacements des 7 bulles (approx visuel du screen) */
+const dots = [7, 9, 11, 2, 6, 4, 1]
+const bubblePos = [
+  { left: '18%', top: '18%' },
+  { left: '46%', top: '12%' },
+  { left: '74%', top: '18%' },
+  { left: '22%', top: '58%' },
+  { left: '50%', top: '48%' },
+  { left: '78%', top: '58%' },
+  { left: '50%', top: '78%' },
+]
+
+const progressRows = [
+  { label: 'Possession', value: 64 },
+  { label: 'Taux de convertion des tirs', value: 72 },
+  { label: 'Tirs à 7m', value: 85 },
+  { label: 'Taux d’actions défensives', value: 58 },
+]
+
+const table = [
+  { name: 'Sambre Avesnois', w: 12, d: 3, l: 1, pts: 39, logo: 'https://placehold.co/64x64' },
+  { name: 'Paris 92', w: 11, d: 2, l: 3, pts: 35, logo: 'https://placehold.co/64x64' },
+  { name: 'Strasbourg Achenheim Truchtersheim', w: 10, d: 3, l: 3, pts: 33, logo: 'https://placehold.co/64x64' },
+  { name: 'Havre Athletic Club', w: 9, d: 4, l: 3, pts: 31, logo: 'https://placehold.co/64x64' },
+  { name: 'Entente Sportive Besançon', w: 8, d: 2, l: 6, pts: 26, logo: 'https://placehold.co/64x64' },
+]
 </script>
 
 <style scoped>
-/* Hint perf pour le moteur de rendu */
-.will-change-transform {
-  will-change: transform, opacity;
+/* ---- primitives visuelles proches du screen ---- */
+.card{
+  background: #fff;
+  border: 1px solid #F1F1F4;
+  border-radius: 18px;
+  box-shadow: 0 16px 36px -14px rgba(16,24,40,0.10);
 }
+
+/* bouton dégradé */
+.btn-gradient{
+  border-radius: 9999px;
+  padding: 8px 14px;
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(90deg, #F472B6 0%, #A78BFA 100%);
+  box-shadow: 0 8px 22px rgba(244,114,182,0.25);
+}
+
+/* titre de section avec léger soulignement (proche du screen) */
+.section-title{
+  color:#6B21A8; /* violet profond */
+  font-weight:600;
+  font-size: 15px;
+  position:relative;
+  padding-bottom:.35rem;
+}
+.section-title::after{
+  content:"";
+  position:absolute; left:0; bottom:0;
+  width:210px; height:3px; border-radius:6px;
+  background: linear-gradient(90deg,#60A5FA 0%,#A78BFA 50%,#F472B6 100%);
+  opacity:.75;
+}
+
+/* chips du header */
+.stat-chip{
+  background:#FAFAFB;
+  border:1px solid #F1F1F4;
+  border-radius:14px;
+  padding:10px 12px;
+  display:flex; flex-direction:column; gap:4px;
+  box-shadow: 0 6px 16px -10px rgba(16,24,40,0.10);
+}
+
+/* KPI */
+.kpi-card{
+  background:#fff;
+  border:1px solid #F1F1F4;
+  border-radius:16px;
+  padding:18px 16px;
+  box-shadow: 0 10px 26px -16px rgba(16,24,40,0.12);
+}
+.kpi-head{ display:flex; align-items:center; justify-content:space-between; font-size:13px; color:#6B7280; }
+.kpi-value{ margin-top:6px; font-size:28px; font-weight:700; color:#111827; line-height:1; }
+.kpi-trend{ margin-top:4px; font-size:12px; font-weight:600; }
+.kpi-trend.up{ color:#10B981; }
+.kpi-trend.down{ color:#EF4444; }
 </style>

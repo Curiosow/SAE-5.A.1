@@ -1,181 +1,306 @@
 <template>
-  <main class="min-h-screen relative overflow-hidden bg-gray-900 text-white font-sans">
-    <!-- LUEURS ROSES ANIMÉES -->
-    <div
-        class="pointer-events-none fixed inset-0 z-0 animate-light1"
-        style="background: radial-gradient(ellipse at 70% 10%, #ec4899 0%, transparent 70%);
-             filter: blur(120px); opacity: 0.35; mix-blend: screen;"
-    />
-    <div
-        class="pointer-events-none fixed inset-0 z-0 animate-light2"
-        style="background: radial-gradient(ellipse at 20% 80%, #ec4899 0%, transparent 70%);
-             filter: blur(140px); opacity: 0.25; mix-blend: screen;"
-    />
-    <div
-        class="pointer-events-none fixed inset-0 z-0 animate-light3"
-        style="background: radial-gradient(ellipse at 50% 50%, #ec4899 0%, transparent 70%);
-             filter: blur(100px); opacity: 0.18; mix-blend: screen;"
-    />
+  <main class="min-h-screen bg-[#f7f7fb]">
+    <div class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 pt-6 pb-12">
 
-    <!-- PARTICULES FINES ANIMÉES -->
-    <div
-        v-for="n in PARTICLE_COUNT"
-        :key="n"
-        class="pointer-events-none fixed z-10 rounded-full bg-white"
-        :class="[
-        n % 7 === 0 ? 'w-[3px] h-[3px]' : 'w-[2px] h-[2px]',
-        positions[(n - 1) % positions.length],
-        animations[n % animations.length],
-        n % 4 === 0 ? 'animate-twinkle' : '',
-        'opacity-70'
-      ]"
-        :style="{
-        animationDelay: `${(n % 5) * 1.2}s`,
-        animationDuration: `${8 + (n % 5) * 0.8}s`,
-        filter: n % 6 === 0 ? 'blur(0.4px)' : 'none'
-      }"
-    />
-
-    <!-- CONTENU JOUEUSE -->
-    <div class="relative z-20 max-w-6xl mx-auto p-6">
-      <!-- Header -->
-      <div class="flex items-center justify-between mb-10">
-        <h1 class="text-3xl font-bold">Joueuse 1</h1>
-        <span class="px-3 py-1 text-sm bg-green-400/20 text-green-300 rounded-full border border-green-400/40">
-          Active
-        </span>
-      </div>
-
-      <!-- Onglets -->
-      <div class="flex gap-4 mb-10">
-        <button
-            v-for="tab in tabs"
-            :key="tab"
-            @click="activeTab = tab"
-            class="px-5 py-2 rounded-xl border transition-all duration-300"
-            :class="activeTab === tab
-            ? 'bg-pink-500/30 border-pink-400 text-pink-200 shadow-lg scale-[1.05]'
-            : 'bg-white/10 border-white/20 text-white/70 hover:text-white hover:scale-[1.02]'"
-        >
-          {{ tab }}
+      <!-- Back button -->
+      <div class="mb-4">
+        <button @click="$router.back()"
+                class="inline-flex items-center gap-2 text-sm text-gray-700 bg-white/60 backdrop-blur rounded-full px-3 py-2 shadow-sm border border-gray-100">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M15 18L9 12l6-6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Retour aux Joueuses
         </button>
       </div>
 
-      <!-- Contenu selon onglet -->
-      <div v-if="activeTab === 'Performances'">
-        <!-- Stats top -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-          <div
-              v-for="(stat, i) in topStats"
-              :key="i"
-              class="p-8 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30 text-center
-                   transition-all duration-300 ease-in-out hover:scale-[1.02]"
-          >
-            <p class="text-3xl font-bold text-pink-400">{{ stat.value }}</p>
-            <p class="text-white/80 mt-2">{{ stat.label }}</p>
+      <!-- Large header card -->
+      <header class="relative card-large p-6 sm:p-8 mb-6">
+        <div class="grid grid-cols-[140px_1fr] gap--1 items-start">
+          <!-- Avatar column -->
+          <div class="relative">
+            <div
+                class="h-28 w-28 rounded-full shadow-avatar bg-gradient-to-br from-rose-400 to-violet-500 grid place-items-center text-3xl font-bold text-white">
+              J1
+            </div>
+            <div
+                class="absolute -right--1 -bottom-1 h-7 w-7 rounded-full bg-white border border-gray-100 flex items-center justify-center text-sm font-semibold shadow-sm">
+              9
+            </div>
+          </div>
+
+          <!-- Content column: NAME -> BADGES -> KPI ROW -->
+          <div class="flex flex-col gap-4">
+            <!-- NAME -->
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-extrabold text-[#6B21A8] leading-tight">Joueuse 1</h1>
+            </div>
+
+            <!-- BADGES (sous le nom) -->
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs bg-white border border-gray-100 px-2 py-1 rounded-full text-gray-600 flex items-center gap-2">
+                <svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.2"/></svg>
+                Pivot
+              </span>
+
+              <span class="text-xs bg-white border border-gray-100 px-2 py-1 rounded-full text-gray-600 flex items-center gap-2">
+                <svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M6 8h12" stroke="currentColor" stroke-width="1.2"/></svg>
+                Sambre Avesnois
+              </span>
+
+              <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span>
+            </div>
+
+            <!-- KPI cards (sous les badges) -->
+            <div class="mt-2">
+              <!-- Desktop: single row; Mobile: grid 2x2 -->
+              <div class="hidden md:flex gap-4">
+                <div class="mini-kpi">
+                  <div class="text-sm text-gray-500">Buts</div>
+                  <div class="text-2xl font-semibold text-gray-900">45</div>
+                  <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" style="width:72%"></div>
+                  </div>
+                </div>
+
+                <div class="mini-kpi">
+                  <div class="text-sm text-gray-500">Assistances</div>
+                  <div class="text-2xl font-semibold text-gray-900">28</div>
+                  <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" style="width:62%"></div>
+                  </div>
+                </div>
+
+                <div class="mini-kpi">
+                  <div class="text-sm text-gray-500">Arrêts</div>
+                  <div class="text-2xl font-semibold text-gray-900">0</div>
+                  <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" style="width:6%"></div>
+                  </div>
+                </div>
+
+                <div class="mini-kpi">
+                  <div class="text-sm text-gray-500">Contre-attaques</div>
+                  <div class="text-2xl font-semibold text-gray-900">12</div>
+                  <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" style="width:44%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mobile grid 2x2 -->
+              <div class="grid grid-cols-2 gap-4 md:hidden">
+                <div class="mini-kpi">
+                  <div class="text-sm text-gray-500">Buts</div>
+                  <div class="text-xl font-semibold text-gray-900">45</div>
+                  <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" style="width:72%"></div>
+                  </div>
+                </div>
+
+                <div class="mini-kpi">
+                  <div class="text-sm text-gray-500">Assistances</div>
+                  <div class="text-xl font-semibold text-gray-900">28</div>
+                  <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" style="width:62%"></div>
+                  </div>
+                </div>
+
+                <div class="mini-kpi">
+                  <div class="text-sm text-gray-500">Arrêts</div>
+                  <div class="text-xl font-semibold text-gray-900">0</div>
+                  <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" style="width:6%"></div>
+                  </div>
+                </div>
+
+                <div class="mini-kpi">
+                  <div class="text-sm text-gray-500">Contre-attaques</div>
+                  <div class="text-xl font-semibold text-gray-900">12</div>
+                  <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                    <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" style="width:44%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- end KPI -->
           </div>
         </div>
+      </header>
 
-        <!-- Bottom sections -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div
-              v-for="(section, i) in bottomSections"
-              :key="i"
-              class="p-8 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30
-                   transition-all duration-300 ease-in-out hover:scale-[1.01]"
-          >
-            <h2 class="font-semibold text-lg text-pink-300 mb-4">{{ section.title }}</h2>
-            <ul class="space-y-2 text-sm text-white/90">
-              <li v-for="(item, j) in section.items" :key="j">{{ item }}</li>
-            </ul>
+      <!-- Tabs -->
+      <nav class="tabs flex gap-2 bg-white/60 border border-gray-100 rounded-full px-1 py-1 mb-6" role="tablist">
+        <button
+            v-for="t in tabs"
+            :key="t"
+            :class="['tab px-4 py-2 rounded-full text-sm font-semibold', activeTab === t ? 'active' : '']"
+            @click="activeTab = t"
+            role="tab"
+            :aria-selected="activeTab === t"
+        >
+          {{ t }}
+        </button>
+      </nav>
+
+      <!-- Main content depending on tab (for now same content across tabs, but ready) -->
+      <section v-if="activeTab === 'Performance'">
+        <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
+          <!-- Left column: 3 cards row (offensives / defensives / discipline) -->
+          <div class="space-y-6">
+            <div class="card p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistiques offensives</h3>
+              <ul class="space-y-3 text-sm text-gray-700">
+                <li class="flex justify-between"><span>Buts totaux</span><strong>45</strong></li>
+                <li class="flex justify-between"><span>Assistances</span><strong>28</strong></li>
+                <li class="flex justify-between"><span>Contre-attaques</span><strong>12</strong></li>
+                <li class="flex justify-between"><span>Tir à 7 mètres</span><strong>7</strong></li>
+              </ul>
+            </div>
+
+            <div class="card p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Statistiques défensives</h3>
+              <ul class="space-y-3 text-sm text-gray-700">
+                <li class="flex justify-between"><span>Arrêts</span><strong>0</strong></li>
+                <li class="flex justify-between"><span>Actions défensives</span><strong>25</strong></li>
+                <li class="flex justify-between"><span>Taux d'arrêts</span><strong>0%</strong></li>
+              </ul>
+            </div>
+
+            <div class="card p-6">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Discipline</h3>
+              <ul class="space-y-3 text-sm text-gray-700">
+                <li class="flex justify-between"><span>Pénaltis</span><strong>8</strong></li>
+                <li class="flex justify-between"><span>Cartons jaunes</span><strong>1</strong></li>
+                <li class="flex justify-between"><span>Cartons rouges</span><strong>1</strong></li>
+                <li class="flex justify-between"><span>Suspensions</span><strong>0</strong></li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- Right column: summary / small visual area -->
+          <aside class="card p-6">
+            <h4 class="text-sm font-semibold text-gray-900">Résumé</h4>
+            <div class="mt-4 text-sm text-gray-600">
+              <p>Buts : <strong>45</strong></p>
+              <p>Assistances : <strong>28</strong></p>
+              <p>Contre-attaques : <strong>12</strong></p>
+            </div>
+            <div class="mt-6">
+              <button class="btn-gradient w-full">Voir plus</button>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section v-else-if="activeTab === 'Précision'">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Tirs & Précision</h3>
+            <p class="text-sm text-gray-600">Détails sur la précision des tirs, zones, etc.</p>
+          </div>
+          <div class="card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">7m</h3>
+            <p class="text-sm text-gray-600">Statistiques des pénaltys à 7m.</p>
+          </div>
+          <div class="card p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Précision par zone</h3>
+            <p class="text-sm text-gray-600">Heatmap & zones.</p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div v-else-if="activeTab === 'Pénalités'">
-        <div class="p-10 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30">
-          <h2 class="text-pink-300 text-lg font-semibold mb-4">Pénalités</h2>
-          <p class="text-white/80">Aucune pénalité enregistrée.</p>
+      <section v-else-if="activeTab === 'Avancés'">
+        <div class="card p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Analyses avancées</h3>
+          <p class="text-sm text-gray-600">Mesures avancées, expected goals, clustering...</p>
         </div>
-      </div>
+      </section>
 
-      <div v-else-if="activeTab === 'Assists'">
-        <div class="p-10 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30">
-          <h2 class="text-pink-300 text-lg font-semibold mb-4">Assists</h2>
-          <p class="text-white/80">Passes décisives : 12</p>
+      <section v-else-if="activeTab === 'Heat Map'">
+        <div class="card p-6">
+          <h3 class="text-lg font-semibold text-gray-900 mb-4">Heat Map</h3>
+          <p class="text-sm text-gray-600">Affichage de la carte de chaleur des tirs / déplacements.</p>
         </div>
-      </div>
+      </section>
 
-      <div v-else-if="activeTab === 'Discipline'">
-        <div class="p-10 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30">
-          <h2 class="text-pink-300 text-lg font-semibold mb-4">Discipline</h2>
-          <ul class="text-white/90 space-y-2">
-            <li>Cartons rouges : 1</li>
-            <li>Cartons jaunes : 3</li>
-            <li>Sanctions reçues : 2</li>
-          </ul>
-        </div>
-      </div>
-
-      <div v-else-if="activeTab === 'Ton Mvp'">
-        <div class="p-10 rounded-2xl bg-white/20 backdrop-blur-md shadow-xl border border-white/30">
-          <h2 class="text-pink-300 text-lg font-semibold mb-4">MVP</h2>
-          <p class="text-white/80">Meilleure performance à venir 🔥</p>
-        </div>
-      </div>
+      <div class="mt-8"></div>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-const PARTICLE_COUNT = 36
+import { ref } from 'vue'
 
-const positions = [
-  'top-10 left-10',
-  'top-20 left-1/3',
-  'top-1/2 left-1/4',
-  'top-1/3 left-1/2',
-  'top-2/3 left-1/5',
-  'top-1/4 left-3/4',
-  'top-3/4 left-1/6',
-  'top-1/5 left-2/3',
-  'top-2/5 left-1/2',
-  'top-3/5 left-1/3',
-  'top-4/5 left-1/4',
-  'top-1/6 left-3/5',
-  'top-5/6 left-1/2',
-]
+const tabs = ['Performance', 'Précision', 'Avancés', 'Heat Map']
+const activeTab = ref('Performance')
 
-const animations = ['animate-float1', 'animate-float2', 'animate-float3']
-
-const tabs = ['Performances', 'Pénalités', 'Assists', 'Discipline', 'Ton Mvp']
-let activeTab = $ref('Performances')
-
-const topStats = [
-  { label: 'Buts', value: 45 },
-  { label: 'Attaques', value: 28 },
-  { label: 'Arrêts', value: 0 },
-  { label: 'Cartons reçus', value: 12 },
-]
-
-const bottomSections = [
-  {
-    title: 'Statistiques offensives',
-    items: ['Buts inscrits: 45', 'Tirs: 28', 'Passes décisives: 12', 'Dribbles réussis: 7'],
-  },
-  {
-    title: 'Statistiques défensives',
-    items: ['Arrêts: 0', 'Actions défensives: 9', 'Interceptions: 25'],
-  },
-  {
-    title: 'Discipline',
-    items: ['Cartons rouges: 1', 'Cartons jaunes: 3', 'Sanctions reçues: 2'],
-  },
-]
+// mock data placeholders (replace with API data)
+const progressRows = [{ label: 'Possession', value: 64 }]
+const kpis = { goals: 45, assists: 28, saves: 0, counters: 12 }
 </script>
 
 <style scoped>
-.will-change-transform {
-  will-change: transform, opacity;
+/* Card styles */
+.card-large {
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid #f1f1f4;
+  box-shadow: 0 18px 40px -20px rgba(16,24,40,0.12);
+  display: flex;
+  align-items: flex-start;
+}
+
+.card {
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #f1f1f4;
+  box-shadow: 0 10px 30px -18px rgba(16,24,40,0.08);
+}
+
+/* Avatar shadow */
+.shadow-avatar {
+  box-shadow: 0 18px 40px -26px rgba(168,85,247,0.35);
+}
+
+/* mini KPI */
+.mini-kpi {
+  width: 200px;
+  background: #fff;
+  border: 1px solid #f3f3f6;
+  border-radius: 12px;
+  padding: 10px 12px;
+  box-shadow: 0 8px 26px -20px rgba(16,24,40,0.06);
+}
+
+/* tabs */
+.tabs .tab {
+  padding: 10px 18px;
+  border-radius: 9999px;
+  font-weight: 600;
+  color: #6b7280;
+  background: transparent;
+  border: none;
+}
+.tabs .tab.active {
+  background: linear-gradient(90deg,#f472b6,#a78bfa);
+  color: white;
+  box-shadow: 0 6px 20px -12px rgba(167,139,250,0.4);
+}
+
+/* button gradient */
+.btn-gradient {
+  border-radius: 9999px;
+  padding: 8px 14px;
+  color: #fff;
+  font-weight: 600;
+  background: linear-gradient(90deg, #F472B6 0%, #A78BFA 100%);
+  box-shadow: 0 8px 22px rgba(244,114,182,0.25);
+}
+
+/* small typography tweaks */
+.text-white\/85 { color: rgba(255,255,255,0.85); }
+
+/* responsive tweaks */
+@media (min-width: 1024px) {
+  .mini-kpi { width: 220px; }
 }
 </style>

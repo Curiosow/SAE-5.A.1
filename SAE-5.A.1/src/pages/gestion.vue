@@ -8,308 +8,236 @@ const showModal = ref(false)
 const members = ref<any[]>([])
 const tableColumns = ref<string[]>(['Nom', 'Prénom', 'Adresse e-mail', 'Type de compte'])
 
-// Prénom éditable
-const editingPlayerEmail = ref<string | null>(null)
-const editingFirstName = ref('')
-
-function startEditFirstName(member: any) {
-  editingPlayerEmail.value = member.email
-  editingFirstName.value = member.firstName
+// Dropdown players helper (affiche la liste des joueuses pour une ligne)
+const playersDropdownForEmail = ref<string | null>(null)
+function togglePlayersDropdown(email: string | null) {
+  playersDropdownForEmail.value = playersDropdownForEmail.value === email ? null : email
+}
+function closePlayersDropdown() {
+  playersDropdownForEmail.value = null
+}
+function selectPlayerFromDropdown(targetMember: any, playerEmail: string) {
+  const p = members.value.find((m: any) => m.email === playerEmail)
+  if (!p) return
+  // remplacer les champs de la ligne cible par ceux de la joueuse sélectionnée (localement)
+  targetMember.firstName = p.firstName
+  targetMember.lastName = p.lastName
+  targetMember.teamName = p.teamName
+  targetMember.email = p.email
+  targetMember.jerseyNumber = p.jerseyNumber
+  targetMember.birthDate = p.birthDate
+  targetMember.heightCm = p.heightCm
+  targetMember.isActive = p.isActive
+  closePlayersDropdown()
 }
 
+// --- Édition inline (joueuse) ---
+const editingPlayerEmail = ref<string | null>(null)
+const editingFirstName = ref('')
+function startEditFirstName(member: any) {
+  editingPlayerEmail.value = member.email
+  editingFirstName.value = member.firstName || ''
+}
 async function saveFirstName(member: any) {
-  if (!editingFirstName.value.trim()) {
-    editingPlayerEmail.value = null
-    return
-  }
+  if (!editingFirstName.value.trim()) { editingPlayerEmail.value = null; return }
   await fetch('http://localhost:8080/auth/update_player_firstname', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      newFirstName: editingFirstName.value
-    })
+    body: new URLSearchParams({ email: member.email, newFirstName: editingFirstName.value })
   })
   member.firstName = editingFirstName.value
   editingPlayerEmail.value = null
   editingFirstName.value = ''
 }
 
-// Nom éditable
+// Nom joueuse
 const editingLastName = ref<string | null>(null)
 const editingLastNameValue = ref('')
-
 function startEditLastName(member: any) {
   editingLastName.value = member.email
-  editingLastNameValue.value = member.lastName
+  editingLastNameValue.value = member.lastName || ''
 }
-
 async function saveLastName(member: any) {
-  if (!editingLastNameValue.value.trim()) {
-    editingLastName.value = null
-    return
-  }
+  if (!editingLastNameValue.value.trim()) { editingLastName.value = null; return }
   await fetch('http://localhost:8080/auth/update_player_lastname', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      newLastName: editingLastNameValue.value
-    })
+    body: new URLSearchParams({ email: member.email, newLastName: editingLastNameValue.value })
   })
   member.lastName = editingLastNameValue.value
   editingLastName.value = null
   editingLastNameValue.value = ''
 }
 
-// Numéro de maillot éditable
+// Numéro
 const editingJerseyNumber = ref<string | null>(null)
 const editingJerseyNumberValue = ref<number | string>('')
-
 function startEditJerseyNumber(member: any) {
   editingJerseyNumber.value = member.email
-  editingJerseyNumberValue.value = member.jerseyNumber
+  editingJerseyNumberValue.value = member.jerseyNumber ?? ''
 }
-
 async function saveJerseyNumber(member: any) {
-  if (editingJerseyNumberValue.value === '' || editingJerseyNumberValue.value === null) {
-    editingJerseyNumber.value = null
-    return
-  }
+  if (editingJerseyNumberValue.value === '' || editingJerseyNumberValue.value === null) { editingJerseyNumber.value = null; return }
   await fetch('http://localhost:8080/auth/update_player_number', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      jerseyNumber: editingJerseyNumberValue.value.toString()
-    })
+    body: new URLSearchParams({ email: member.email, jerseyNumber: editingJerseyNumberValue.value.toString() })
   })
   member.jerseyNumber = editingJerseyNumberValue.value
   editingJerseyNumber.value = null
   editingJerseyNumberValue.value = ''
 }
 
-// Taille éditable
+// Taille
 const editingHeightEmail = ref<string | null>(null)
 const editingHeightValue = ref<number | string>('')
-
 function startEditHeight(member: any) {
   editingHeightEmail.value = member.email
-  editingHeightValue.value = member.heightCm
+  editingHeightValue.value = member.heightCm ?? ''
 }
-
 async function saveHeight(member: any) {
-  if (editingHeightValue.value === '' || editingHeightValue.value === null) {
-    editingHeightEmail.value = null
-    return
-  }
+  if (editingHeightValue.value === '' || editingHeightValue.value === null) { editingHeightEmail.value = null; return }
   await fetch('http://localhost:8080/auth/update_player_height', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      heightCm: editingHeightValue.value.toString()
-    })
+    body: new URLSearchParams({ email: member.email, heightCm: editingHeightValue.value.toString() })
   })
   member.heightCm = editingHeightValue.value
   editingHeightEmail.value = null
   editingHeightValue.value = ''
 }
 
-async function toggleActive(member: any) {
-  const newActive = member.isActive === 'Oui' ? false : true
-  await fetch('http://localhost:8080/auth/update_player_active', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      isActive: newActive.toString()
-    })
-  })
-  member.isActive = newActive ? 'Oui' : 'Non'
-}
-
-// Email éditable
-const editingEmail = ref<string | null>(null)
-const editingEmailValue = ref('')
-
-function startEditEmail(member: any) {
-  editingEmail.value = member.email
-  editingEmailValue.value = member.email
-}
-
-async function saveEmail(member: any) {
-  if (!editingEmailValue.value.trim()) {
-    editingEmail.value = null
-    return
-  }
-  await fetch('http://localhost:8080/auth/update_player_email', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      oldEmail: member.email,
-      newEmail: editingEmailValue.value
-    })
-  })
-  member.email = editingEmailValue.value
-  editingEmail.value = null
-  editingEmailValue.value = ''
-}
-
-// Date de naissance éditable
+// Date de naissance
 const editingBirthDateEmail = ref<string | null>(null)
 const editingBirthDateValue = ref('')
-
 function startEditBirthDate(member: any) {
   editingBirthDateEmail.value = member.email
-  editingBirthDateValue.value = member.birthDate
+  editingBirthDateValue.value = member.birthDate ?? ''
 }
-
 async function saveBirthDate(member: any) {
-  if (!editingBirthDateValue.value.trim()) {
-    editingBirthDateEmail.value = null
-    return
-  }
+  if (!editingBirthDateValue.value.trim()) { editingBirthDateEmail.value = null; return }
   await fetch('http://localhost:8080/auth/update_player_birthdate', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      birthDate: editingBirthDateValue.value
-    })
+    body: new URLSearchParams({ email: member.email, birthDate: editingBirthDateValue.value })
   })
   member.birthDate = editingBirthDateValue.value
   editingBirthDateEmail.value = null
   editingBirthDateValue.value = ''
 }
 
-// Prénom coach éditable
+// Email joueur
+const editingEmail = ref<string | null>(null)
+const editingEmailValue = ref('')
+function startEditEmail(member: any) {
+  editingEmail.value = member.email
+  editingEmailValue.value = member.email || ''
+}
+async function saveEmail(member: any) {
+  if (!editingEmailValue.value.trim()) { editingEmail.value = null; return }
+  await fetch('http://localhost:8080/auth/update_player_email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ oldEmail: member.email, newEmail: editingEmailValue.value })
+  })
+  member.email = editingEmailValue.value
+  editingEmail.value = null
+  editingEmailValue.value = ''
+}
+
+// Actif joueur
+async function toggleActive(member: any) {
+  const newActive = member.isActive === 'Oui' ? false : true
+  await fetch('http://localhost:8080/auth/update_player_active', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ email: member.email, isActive: newActive.toString() })
+  })
+  member.isActive = newActive ? 'Oui' : 'Non'
+}
+
+// --- Édition inline (coach) ---
 const editingCoachFirstNameEmail = ref<string | null>(null)
 const editingCoachFirstNameValue = ref('')
-
 function startEditCoachFirstName(member: any) {
   editingCoachFirstNameEmail.value = member.email
-  editingCoachFirstNameValue.value = member.firstName
+  editingCoachFirstNameValue.value = member.firstName || ''
 }
 async function saveCoachFirstName(member: any) {
-  if (!editingCoachFirstNameValue.value.trim()) {
-    editingCoachFirstNameEmail.value = null
-    return
-  }
+  if (!editingCoachFirstNameValue.value.trim()) { editingCoachFirstNameEmail.value = null; return }
   await fetch('http://localhost:8080/auth/update_coach_firstname', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      newFirstName: editingCoachFirstNameValue.value
-    })
+    body: new URLSearchParams({ email: member.email, newFirstName: editingCoachFirstNameValue.value })
   })
   member.firstName = editingCoachFirstNameValue.value
   editingCoachFirstNameEmail.value = null
   editingCoachFirstNameValue.value = ''
 }
 
-// Nom coach éditable
 const editingCoachLastNameEmail = ref<string | null>(null)
 const editingCoachLastNameValue = ref('')
-
 function startEditCoachLastName(member: any) {
   editingCoachLastNameEmail.value = member.email
-  editingCoachLastNameValue.value = member.lastName
+  editingCoachLastNameValue.value = member.lastName || ''
 }
 async function saveCoachLastName(member: any) {
-  if (!editingCoachLastNameValue.value.trim()) {
-    editingCoachLastNameEmail.value = null
-    return
-  }
+  if (!editingCoachLastNameValue.value.trim()) { editingCoachLastNameEmail.value = null; return }
   await fetch('http://localhost:8080/auth/update_coach_lastname', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      newLastName: editingCoachLastNameValue.value
-    })
+    body: new URLSearchParams({ email: member.email, newLastName: editingCoachLastNameValue.value })
   })
   member.lastName = editingCoachLastNameValue.value
   editingCoachLastNameEmail.value = null
   editingCoachLastNameValue.value = ''
 }
 
-// Email coach éditable
 const editingCoachEmail = ref<string | null>(null)
 const editingCoachEmailValue = ref('')
-
 function startEditCoachEmail(member: any) {
   editingCoachEmail.value = member.email
-  editingCoachEmailValue.value = member.email
+  editingCoachEmailValue.value = member.email || ''
 }
 async function saveCoachEmail(member: any) {
-  if (!editingCoachEmailValue.value.trim()) {
-    editingCoachEmail.value = null
-    return
-  }
+  if (!editingCoachEmailValue.value.trim()) { editingCoachEmail.value = null; return }
   await fetch('http://localhost:8080/auth/update_coach_email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      oldEmail: member.email,
-      newEmail: editingCoachEmailValue.value
-    })
+    body: new URLSearchParams({ oldEmail: member.email, newEmail: editingCoachEmailValue.value })
   })
   member.email = editingCoachEmailValue.value
   editingCoachEmail.value = null
   editingCoachEmailValue.value = ''
 }
 
-// Actif coach éditable
 async function toggleCoachActive(member: any) {
   const newActive = member.isActive === 'Oui' ? false : true
   await fetch('http://localhost:8080/auth/update_coach_active', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      email: member.email,
-      isActive: newActive.toString()
-    })
+    body: new URLSearchParams({ email: member.email, isActive: newActive.toString() })
   })
   member.isActive = newActive ? 'Oui' : 'Non'
 }
 
-
-
-
-
+// Colonnes selon onglet
 function setTableColumns() {
   if (selectedMenu.value === 'Coach') {
-    tableColumns.value = [
-      'Nom',
-      'Prénom',
-      'Adresse e-mail',
-      'Actif'
-    ]
+    tableColumns.value = ['Nom', 'Prénom', 'Adresse e-mail', 'Actif']
   } else if (selectedMenu.value === 'Joueuses') {
-    tableColumns.value = [
-      'Nom',
-      'Prénom',
-      'Équipe',
-      'Adresse e-mail',
-      'Numéro de maillot',
-      'Date de naissance',
-      'Taille (cm)',
-      'Active'
-    ]
+    tableColumns.value = ['Nom', 'Prénom', 'Équipe', 'Adresse e-mail', 'Numéro de maillot', 'Date de naissance', 'Taille (cm)', 'Active']
   } else {
     tableColumns.value = ['Nom', 'Prénom', 'Adresse e-mail', 'Type de compte']
   }
 }
-// Récupération des membres
+
+// Récupération des membres depuis l'API
 async function fetchMembers() {
   let url = 'http://localhost:8080/auth/members'
-  if (selectedMenu.value === 'Coach') {
-    url = 'http://localhost:8080/auth/coaches'
-  } else if (selectedMenu.value === 'Joueuses') {
-    url = 'http://localhost:8080/auth/players'
-  }
+  if (selectedMenu.value === 'Coach') url = 'http://localhost:8080/auth/coaches'
+  else if (selectedMenu.value === 'Joueuses') url = 'http://localhost:8080/auth/players'
+
   const response = await fetch(url)
   const data = await response.json()
   if (selectedMenu.value === 'Coach') {
@@ -317,7 +245,7 @@ async function fetchMembers() {
       lastName: m.last_name || '',
       firstName: m.first_name || '',
       email: m.email,
-      isActive: m.is_active ? 'Oui' : 'Non',
+      isActive: m.is_active ? 'Oui' : 'Non'
     }))
   } else if (selectedMenu.value === 'Joueuses') {
     members.value = data.map((m: any) => ({
@@ -325,42 +253,46 @@ async function fetchMembers() {
       firstName: m.first_name || '',
       teamName: m.team_name || '',
       email: m.email,
-      jerseyNumber: m.jersey_number || '',
+      jerseyNumber: m.jersey_number ?? '',
       birthDate: m.birth_date || '',
-      heightCm: m.height_cm || '',
-      isActive: m.is_active ? 'Oui' : 'Non',
+      heightCm: m.height_cm ?? '',
+      isActive: m.is_active ? 'Oui' : 'Non'
     }))
   } else {
     members.value = data.map((m: any) => ({
       lastName: m.last_name || m.lastName || '',
       firstName: m.first_name || m.firstName || '',
       email: m.email,
-      role: m.account_type || selectedMenu.value,
+      role: m.account_type || selectedMenu.value
     }))
   }
   setTableColumns()
 }
 
-// Filtrage recherche
+// Filtrage
 const filteredMembers = computed(() =>
-  members.value.filter(
-    (m) =>
-      m.firstName?.toLowerCase().includes(search.value.toLowerCase()) ||
-      m.lastName?.toLowerCase().includes(search.value.toLowerCase()) ||
-      m.email?.toLowerCase().includes(search.value.toLowerCase())
+  members.value.filter((m) =>
+    (m.firstName || '').toLowerCase().includes(search.value.toLowerCase()) ||
+    (m.lastName || '').toLowerCase().includes(search.value.toLowerCase()) ||
+    (m.email || '').toLowerCase().includes(search.value.toLowerCase())
   )
 )
 
-// Formulaire ajout membre
+// Formulaire ajout membre (inclut champs joueuse)
 const newMember = ref({
   firstName: '',
   lastName: '',
   email: '',
   role: '',
   password: '',
+  teamName: '',
+  jerseyNumber: '',
+  birthDate: '',
+  heightCm: ''
 })
 
 async function addMember() {
+  if (!newMember.value.role) return
   if (newMember.value.role === 'Coach') {
     const params = {
       email: newMember.value.email || '',
@@ -375,15 +307,25 @@ async function addMember() {
     })
     if (!response.ok) {
       const errorText = await response.text()
-      alert("Erreur lors de la création du coach :\n" + errorText)
+      alert('Erreur lors de la création du coach :\n' + errorText)
       return
     }
+    members.value.push({
+      firstName: newMember.value.firstName,
+      lastName: newMember.value.lastName,
+      email: newMember.value.email,
+      isActive: 'Oui'
+    })
   } else if (newMember.value.role === 'Joueuse') {
-    const params = {
+    const params: any = {
       email: newMember.value.email || '',
       password: newMember.value.password || '',
       firstName: newMember.value.firstName || '',
-      lastName: newMember.value.lastName || ''
+      lastName: newMember.value.lastName || '',
+      team_name: newMember.value.teamName || '',
+      jersey_number: (newMember.value.jerseyNumber || '').toString(),
+      birth_date: newMember.value.birthDate || '',
+      height_cm: (newMember.value.heightCm || '').toString()
     }
     const response = await fetch('http://localhost:8080/auth/register_player', {
       method: 'POST',
@@ -392,30 +334,41 @@ async function addMember() {
     })
     if (!response.ok) {
       const errorText = await response.text()
-      alert("Erreur lors de la création de la joueuse :\n" + errorText)
+      alert('Erreur lors de la création de la joueuse :\n' + errorText)
       return
     }
+    members.value.push({
+      firstName: newMember.value.firstName,
+      lastName: newMember.value.lastName,
+      teamName: newMember.value.teamName,
+      email: newMember.value.email,
+      jerseyNumber: newMember.value.jerseyNumber,
+      birthDate: newMember.value.birthDate,
+      heightCm: newMember.value.heightCm,
+      isActive: 'Oui'
+    })
   }
-  members.value.push({
-    firstName: newMember.value.firstName,
-    lastName: newMember.value.lastName,
-    email: newMember.value.email,
-    role: newMember.value.role,
-  })
+  // reset
   newMember.value = {
     firstName: '',
     lastName: '',
     email: '',
     role: '',
-    password: ''
+    password: '',
+    teamName: '',
+    jerseyNumber: '',
+    birthDate: '',
+    heightCm: ''
   }
   showModal.value = false
+  // optionnel : recharger depuis l'API
+  await fetchMembers()
 }
 
+// initialisation
 onMounted(fetchMembers)
 watch(selectedMenu, fetchMembers)
 </script>
-
 <template>
   <div class="min-h-screen bg-[#F7F7FB] flex">
     <aside class="bg-white border border-[#F1F1F4] rounded-[18px] shadow-[0_16px_36px_-14px_rgba(16,24,40,0.10)] w-32 min-w-[8rem] mr-6 mt-8 ml-4 p-5 flex flex-col">
@@ -746,7 +699,31 @@ watch(selectedMenu, fetchMembers)
             <option value="" disabled>Type de compte</option>
             <option>Coach</option>
             <option>Joueuse</option>
+
           </select>
+            <div v-if="newMember.role === 'Joueuse'" class="space-y-2 mb-2">
+              <input
+                  v-model="newMember.jerseyNumber"
+                  type="number"
+                  placeholder="Numéro de maillot"
+                  min="0"
+                  class="border border-gray-200 rounded-lg px-3 py-2 w-full"
+              />
+              <input
+                  v-model="newMember.birthDate"
+                  type="date"
+                  placeholder="Date de naissance"
+                  class="border border-gray-200 rounded-lg px-3 py-2 w-full"
+              />
+              <input
+                  v-model="newMember.heightCm"
+                  type="number"
+                  placeholder="Taille (cm)"
+                  min="0"
+                  class="border border-gray-200 rounded-lg px-3 py-2 w-full"
+              />
+            </div>
+
           <button
               type="submit"
               class="w-full mt-2 px-4 py-2 bg-gradient-to-r from-pink-400 to-violet-400 text-white rounded font-semibold"

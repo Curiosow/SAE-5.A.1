@@ -18,13 +18,21 @@
         <div class="grid grid-cols-[140px_1fr] gap--1 items-start">
           <!-- Avatar column -->
           <div class="relative">
-            <div
-                class="h-28 w-28 rounded-full shadow-avatar bg-gradient-to-br from-rose-400 to-violet-500 grid place-items-center text-3xl font-bold text-white">
-              J1
+            <div class="h-28 w-28 rounded-full shadow-xl shadow-avatar bg-gradient-to-br from-rose-400 to-violet-500 grid place-items-center text-3xl font-bold text-white overflow-hidden -translate-y-2">
+              <img
+                  v-if="players[selectedPlayerIndex]?.picture"
+                  :src="players[selectedPlayerIndex].picture"
+                  alt="Photo de la joueuse"
+                  class="h-28 w-28 rounded-full object-cover scale-125 transition-transform"
+                  style="object-position: top center;"
+              />
+              <span v-else>
+  {{ players[selectedPlayerIndex]?.first_name?.charAt(0) }}{{ players[selectedPlayerIndex]?.last_name?.charAt(0) }}
+  </span>
             </div>
             <div
                 class="absolute -right--1 -bottom-1 h-7 w-7 rounded-full bg-white border border-gray-100 flex items-center justify-center text-sm font-semibold shadow-sm">
-              9
+              {{ players[selectedPlayerIndex]?.jersey_number }}
             </div>
           </div>
 
@@ -32,8 +40,30 @@
           <div class="flex flex-col gap-4">
             <!-- NAME -->
             <div>
-              <h1 class="text-2xl sm:text-3xl font-extrabold text-[#6B21A8] leading-tight">Joueuse 1</h1>
-            </div>
+              <div class="relative">
+                <h1
+                  class="text-2xl sm:text-3xl font-extrabold text-[#6B21A8] leading-tight cursor-pointer"
+                  @click="showDropdown = !showDropdown"
+                >
+                  {{ players[selectedPlayerIndex]?.last_name }} {{ players[selectedPlayerIndex]?.first_name }}
+                  <svg class="inline w-4 h-4 ml-2" viewBox="0 0 20 20"><path d="M6 8l4 4 4-4" stroke="#6B21A8" stroke-width="2" fill="none"/></svg>
+                </h1>
+                <div
+                  v-if="showDropdown"
+                  class="absolute z-10 mt-2 bg-white border border-gray-200 rounded shadow-lg w-64"
+                >
+                  <ul>
+                    <li
+                      v-for="(p, idx) in players"
+                      :key="p.id"
+                      @click="selectPlayer(idx)"
+                      class="px-4 py-2 hover:bg-violet-100 cursor-pointer"
+                    >
+                      {{ p.last_name }} {{ p.first_name }}
+                    </li>
+                  </ul>
+                </div>
+              </div>           </div>
 
             <!-- BADGES (sous le nom) -->
             <div class="flex items-center gap-2 flex-wrap">
@@ -44,7 +74,7 @@
 
               <span class="text-xs bg-white border border-gray-100 px-2 py-1 rounded-full text-gray-600 flex items-center gap-2">
                 <svg class="w-3 h-3 text-gray-400" viewBox="0 0 24 24" fill="none"><path d="M6 8h12" stroke="currentColor" stroke-width="1.2"/></svg>
-                Sambre Avesnois
+  {{ players[selectedPlayerIndex]?.team_name }}
               </span>
 
               <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span>
@@ -226,16 +256,26 @@
     </div>
   </main>
 </template>
-
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const tabs = ['Performance', 'Précision', 'Avancés', 'Heat Map']
 const activeTab = ref('Performance')
+const players = ref([])
+const selectedPlayerIndex = ref(0)
+const showDropdown = ref(false)
 
-// mock data placeholders (replace with API data)
-const progressRows = [{ label: 'Possession', value: 64 }]
-const kpis = { goals: 45, assists: 28, saves: 0, counters: 12 }
+async function fetchPlayers() {
+  const res = await fetch('http://localhost:8080/auth/players')
+  players.value = await res.json()
+}
+
+function selectPlayer(idx: number) {
+  selectedPlayerIndex.value = idx
+  showDropdown.value = false
+}
+
+onMounted(fetchPlayers)
 </script>
 
 <style scoped>

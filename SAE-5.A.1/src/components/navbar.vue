@@ -16,11 +16,10 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
 })
 
-// ✅ Routes à utiliser avec <router-link>
 const navItems = [
   { label: 'Accueil',    href: '/' },
   { label: 'Joueuses',   href: '/joueuses' },
-  { label: 'Stats Équipe', href: '/stats' },
+  { label: 'Upload', href: '/analyse' },
   { label: 'Heatmaps',   href: '/heatmap' },
 ]
 </script>

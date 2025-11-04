@@ -1,11 +1,8 @@
 <template>
-  <!-- on suppose que ta navbar est au-dessus, inchangée -->
   <main class="min-h-screen bg-[#F7F7FB]">
     <div class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 pt-24 pb-16">
 
-      <!-- ===== LIGNE 1 : en-tête équipe + prochain match ===== -->
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-        <!-- Carte équipe -->
         <section class="card p-6 sm:p-8">
           <div class="flex items-start gap-4">
             <div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-rose-400 to-violet-500 text-white grid place-items-center text-xl font-semibold shadow-[0_6px_16px_rgba(168,85,247,0.35)]">
@@ -47,7 +44,6 @@
           </div>
         </section>
 
-        <!-- Prochain match -->
         <aside class="card p-6">
           <h2 class="font-semibold text-gray-900">Prochain match</h2>
 
@@ -64,12 +60,9 @@
         </aside>
       </div>
 
-      <!-- ===== Titre section KPI ===== -->
       <h3 class="mt-10 section-title">Performance d’équipe</h3>
 
-      <!-- ===== LIGNE 2 : 4 KPI ===== -->
       <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- KPI 1 -->
         <div class="kpi-card">
           <div class="kpi-head">
             <span>Buts marqués</span>
@@ -82,7 +75,6 @@
           <div class="kpi-trend up">+{{ kpis.trendGoals }}%</div>
         </div>
 
-        <!-- KPI 2 -->
         <div class="kpi-card">
           <div class="kpi-head">
             <span>Précision de tir</span>
@@ -95,7 +87,6 @@
           <div class="kpi-trend down">-{{ kpis.trendShot }}%</div>
         </div>
 
-        <!-- KPI 3 -->
         <div class="kpi-card">
           <div class="kpi-head">
             <span>Buts concédés</span>
@@ -108,7 +99,6 @@
           <div class="kpi-trend down">-{{ kpis.trendAgainst }}%</div>
         </div>
 
-        <!-- KPI 4 -->
         <div class="kpi-card">
           <div class="kpi-head">
             <span>Contre‑attaques</span>
@@ -122,7 +112,6 @@
         </div>
       </div>
 
-      <!-- ===== LIGNE 3 : placeholder graph + meilleures joueuses ===== -->
       <div class="mt-6 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
         <section class="card p-6 sm:p-8 h-[260px]">
           <h4 class="text-sm font-semibold text-gray-900">Performance de la saison</h4>
@@ -148,7 +137,6 @@
         </aside>
       </div>
 
-      <!-- ===== LIGNE 4 : formation + stats match ===== -->
       <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section class="card p-6 sm:p-8">
           <h4 class="text-sm font-semibold text-gray-900">Formation d’équipe</h4>
@@ -191,43 +179,51 @@
         </section>
       </div>
 
-      <!-- ===== LIGNE 5 : classement ===== -->
       <section class="mt-8 card p-4 sm:p-6">
         <h4 class="text-sm font-semibold text-gray-900 mb-4">Classement de la ligue Butaz</h4>
-        <div class="overflow-x-auto">
+
+        <div v-if="isLoadingClassement" class="text-center py-4 text-gray-500">
+          Chargement du classement...
+        </div>
+
+        <div v-else-if="errorClassement" class="text-center py-4 text-red-500">
+          Erreur: {{ errorClassement.message }}
+        </div>
+
+        <div v-else-if="!classement.length" class="text-center py-4 text-gray-500">
+          Aucune donnée de classement disponible.
+        </div>
+
+        <div v-else class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead>
             <tr class="text-left text-gray-500">
               <th class="py-2 pr-3 w-16">Pos.</th>
               <th class="py-2 pr-3">Équipe</th>
               <th class="py-2 pr-3 w-12 text-center">V</th>
-              <th class="py-2 pr-3 w-12 text-center">E</th>
-              <th class="py-2 pr-3 w-12 text-center">D</th>
+              <th class="py-2 pr-3 w-12 text-center">N</th> <th class="py-2 pr-3 w-12 text-center">D</th>
               <th class="py-2 pr-3 w-16 text-center">PTS</th>
             </tr>
             </thead>
             <tbody>
-            <tr v-for="(t, i) in table" :key="t.name" class="border-t border-gray-100">
+            <tr v-for="equipe in classement" :key="equipe.id" class="border-t border-gray-100">
               <td class="py-3 pr-3">
                   <span
                       class="inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-semibold"
                       :class="[
-                      i === 0 ? 'bg-amber-100 text-amber-700' :
-                      i === 1 ? 'bg-gray-100 text-gray-700'  :
-                      i === 2 ? 'bg-rose-100 text-rose-700'  : 'bg-gray-50 text-gray-600'
+                      equipe.classement_place === 1 ? 'bg-amber-100 text-amber-700' :
+                      equipe.classement_place === 2 ? 'bg-gray-100 text-gray-700'  :
+                      equipe.classement_place === 3 ? 'bg-rose-100 text-rose-700'  : 'bg-gray-50 text-gray-600'
                     ]"
-                  >{{ i + 1 }}</span>
+                  >{{ equipe.classement_place }}</span>
               </td>
               <td class="py-3 pr-3">
-                <div class="flex items-center gap-2">
-                  <img :src="t.logo" alt="" class="h-6 w-6 rounded"/>
-                  <span class="text-gray-800 font-medium">{{ t.name }}</span>
-                </div>
+                <span class="text-gray-800 font-medium">{{ equipe.competition_engagement_equipe_libelle }}</span>
               </td>
-              <td class="py-3 pr-3 text-center">{{ t.w }}</td>
-              <td class="py-3 pr-3 text-center">{{ t.d }}</td>
-              <td class="py-3 pr-3 text-center">{{ t.l }}</td>
-              <td class="py-3 pr-3 text-center font-semibold text-gray-900">{{ t.pts }}</td>
+              <td class="py-3 pr-3 text-center">{{ equipe.classement_nbr_match_gagne }}</td>
+              <td class="py-3 pr-3 text-center">{{ equipe.classement_nbr_match_nul }}</td>
+              <td class="py-3 pr-3 text-center">{{ equipe.classement_nbr_match_perdu }}</td>
+              <td class="py-3 pr-3 text-center font-semibold text-gray-900">{{ equipe.classement_point_total }}</td>
             </tr>
             </tbody>
           </table>
@@ -239,31 +235,26 @@
 </template>
 
 <script setup lang="ts">
-/* Données mock pour reproduire fidèlement le screen */
+import { ref, onMounted } from 'vue' // [MODIFIÉ] Ajout de onMounted
+
+/* Données mock pour reproduire fidèlement le screen (Partie 1-4) */
 const summary = {
   wins: 12, draws: 3, losses: 1, points: 39, rank: 1, form: 'V‑V‑N‑V‑V'
 }
-
 const nextMatch = null as null | {
   opponent: string; date: string; venue: string; logo: string
 }
-// exemple si besoin :
-// const nextMatch = { opponent: 'Paris 92', date: 'Sam. 28 sept • 20:30', venue: 'Domicile', logo: 'https://placehold.co/64x64' }
-
 const kpis = {
   goals: 485, trendGoals: 12.5,
   shotAccuracy: 68.4, trendShot: 3.2,
   goalsAgainst: 325, trendAgainst: 2.1,
   counters: 89, trendCounters: 8.7
 }
-
 const topPlayers = [
   { id: 1, avatar: 'https://placehold.co/64x64', stat: '45 buts', accuracy: 78.5 },
   { id: 2, avatar: 'https://placehold.co/64x64', stat: '8 assistances', accuracy: 0 },
   { id: 3, avatar: 'https://placehold.co/64x64', stat: '38 buts', accuracy: 82.3 },
 ]
-
-/* Formation : emplacements des 7 bulles (approx visuel du screen) */
 const dots = [7, 9, 11, 2, 6, 4, 1]
 const bubblePos = [
   { left: '18%', top: '18%' },
@@ -274,7 +265,6 @@ const bubblePos = [
   { left: '78%', top: '58%' },
   { left: '50%', top: '78%' },
 ]
-
 const progressRows = [
   { label: 'Possession', value: 64 },
   { label: 'Taux de convertion des tirs', value: 72 },
@@ -282,13 +272,64 @@ const progressRows = [
   { label: 'Taux d’actions défensives', value: 58 },
 ]
 
-const table = [
-  { name: 'Sambre Avesnois', w: 12, d: 3, l: 1, pts: 39, logo: 'https://placehold.co/64x64' },
-  { name: 'Paris 92', w: 11, d: 2, l: 3, pts: 35, logo: 'https://placehold.co/64x64' },
-  { name: 'Strasbourg Achenheim Truchtersheim', w: 10, d: 3, l: 3, pts: 33, logo: 'https://placehold.co/64x64' },
-  { name: 'Havre Athletic Club', w: 9, d: 4, l: 3, pts: 31, logo: 'https://placehold.co/64x64' },
-  { name: 'Entente Sportive Besançon', w: 8, d: 2, l: 6, pts: 26, logo: 'https://placehold.co/64x64' },
-]
+// [SUPPRIMÉ] La variable mock `table` a été retirée
+
+// [AJOUTÉ] Logique pour le classement dynamique (LIGNE 5)
+// --- Définition des types ---
+interface EquipeClassement {
+  id: number;
+  poule_competition_id: number;
+  competition_engagement_equipe_libelle: string;
+  structure_id: number;
+  classement_place: number;
+  classement_point_total: number;
+  classement_nbr_match_joue: number;
+  classement_nbr_match_gagne: number;
+  classement_nbr_match_nul: number;
+  classement_nbr_match_perdu: number;
+}
+
+// --- État réactif ---
+const classement = ref<EquipeClassement[]>([])
+// J'utilise des noms spécifiques pour éviter tout conflit
+const isLoadingClassement = ref(true)
+const errorClassement = ref<Error | null>(null)
+
+// --- Endpoint de l'API ---
+const API_ENDPOINT_RANKING = 'http://localhost:8080/ranking'
+
+// --- Fonction de fetch ---
+async function fetchClassement() {
+  isLoadingClassement.value = true
+  errorClassement.value = null
+  try {
+    const response = await fetch(API_ENDPOINT_RANKING)
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`)
+    }
+    const data = await response.json()
+
+    if (data && Array.isArray(data.docs)) {
+      classement.value = data.docs
+    } else {
+      console.warn('Format de réponse API inattendu:', data)
+      classement.value = []
+      throw new Error('Format de réponse API inattendu.')
+    }
+  } catch (err) {
+    console.error('Erreur lors de la récupération du classement:', err)
+    errorClassement.value = err as Error
+  } finally {
+    isLoadingClassement.value = false
+  }
+}
+
+// --- Hook de cycle de vie ---
+onMounted(() => {
+  // Appelle la fonction fetchClassement() lorsque le composant est monté
+  fetchClassement()
+})
+
 </script>
 
 <style scoped>

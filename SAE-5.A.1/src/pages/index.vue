@@ -198,15 +198,12 @@
         <div v-if="isLoadingClassement" class="text-center py-4 text-gray-500">
           Chargement du classement...
         </div>
-
         <div v-else-if="errorClassement" class="text-center py-4 text-red-500">
           Erreur: {{ errorClassement.message }}
         </div>
-
         <div v-else-if="!classement.length" class="text-center py-4 text-gray-500">
           Aucune donnée de classement disponible.
         </div>
-
         <div v-else class="overflow-x-auto">
           <table class="min-w-full text-sm">
             <thead>
@@ -243,25 +240,18 @@
           </table>
         </div>
       </section>
-
     </div>
 
     <Teleport to="body">
       <div v-if="showDetailsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showDetailsModal = false"></div>
-
         <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
           <div class="p-6 border-b border-gray-100 flex items-center justify-between">
             <h3 class="text-lg font-semibold text-gray-900">Prochains matchs de la ligue</h3>
-            <button @click="showDetailsModal = false" class="text-gray-400 hover:text-gray-600">
-              ✕
-            </button>
+            <button @click="showDetailsModal = false" class="text-gray-400 hover:text-gray-600">✕</button>
           </div>
-
           <div class="flex-1 overflow-y-auto p-6">
-            <div v-if="isLoadingMatches" class="text-center text-gray-500 py-8">
-              Chargement des matchs...
-            </div>
+            <div v-if="isLoadingMatches" class="text-center text-gray-500 py-8">Chargement des matchs...</div>
             <div v-else class="space-y-4">
               <div
                   v-for="match in upcomingMatches"
@@ -273,11 +263,8 @@
                   <div class="font-medium text-gray-900 capitalize">
                     {{ new Date(match.rencontre_conclusion_info_date_match).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' }) }}
                   </div>
-                  <div class="text-gray-500">
-                    {{ match.rencontre_conclusion_info_heure_match.slice(0, 5) }}
-                  </div>
+                  <div class="text-gray-500">{{ match.rencontre_conclusion_info_heure_match.slice(0, 5) }}</div>
                 </div>
-
                 <div class="flex-1 text-sm">
                   <div class="font-medium" :class="match.competition_engagement_equipe_libelle_1 === TARGET_TEAM ? 'text-rose-700' : 'text-gray-900'">
                     {{ match.competition_engagement_equipe_libelle_1 }}
@@ -287,10 +274,8 @@
                     {{ match.competition_engagement_equipe_libelle_2 }}
                   </div>
                 </div>
-
                 <div class="text-xs text-gray-500 sm:text-right max-w-[150px]">
-                  {{ match.equipement_nom_salle }}<br>
-                  {{ match.ville_libelle }}
+                  {{ match.equipement_nom_salle }}<br>{{ match.ville_libelle }}
                 </div>
               </div>
             </div>
@@ -304,8 +289,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 
-// --- DONNÉES STATIQUES (Mocks) ---
-const summary = { wins: 12, draws: 3, losses: 1, points: 39, rank: 1, form: 'V‑V‑N‑V‑V' }
+// --- Données statiques (Mocks restants) ---
 const kpis = { goals: 485, trendGoals: 12.5, shotAccuracy: 68.4, trendShot: 3.2, goalsAgainst: 325, trendAgainst: 2.1, counters: 89, trendCounters: 8.7 }
 const topPlayers = [
   { id: 1, avatar: 'https://placehold.co/64x64', stat: '45 buts', accuracy: 78.5 },
@@ -323,81 +307,81 @@ const progressRows = [
 ]
 
 // =========================================
-// === LOGIQUE CLASSEMENT (Ranking) ===
+// === 1. RÉSUMÉ ÉQUIPE (NOUVEAU) ===
 // =========================================
-interface EquipeClassement {
-  id: number;
-  poule_competition_id: number;
-  competition_engagement_equipe_libelle: string;
-  structure_id: number;
-  classement_place: number;
-  classement_point_total: number;
-  classement_nbr_match_joue: number;
-  classement_nbr_match_gagne: number;
-  classement_nbr_match_nul: number;
-  classement_nbr_match_perdu: number;
+const summary = ref({
+  wins: 0, draws: 0, losses: 0, points: 0, rank: 0,
+  form: 'N/A' // Pas dispo dans l'API pour l'instant
+})
+const API_ENDPOINT_SUMMARY = 'http://localhost:8080/rankingAvesnois'
+
+async function fetchTeamSummary() {
+  try {
+    const res = await fetch(API_ENDPOINT_SUMMARY)
+    if (res.ok) {
+      const data = await res.json()
+      // Mapping des données de l'API vers notre objet summary
+      summary.value.wins = data.victoires ?? 0
+      summary.value.draws = data.nuls ?? 0
+      summary.value.losses = data.defaites ?? 0
+      summary.value.points = data.points ?? 0
+      summary.value.rank = data.position ?? 0
+      // La forme reste statique pour l'instant car non fournie par l'API
+      summary.value.form = 'V‑V‑N‑V‑V'
+    }
+  } catch (e) {
+    console.error("Erreur fetch résumé équipe", e)
+  }
 }
 
+// =========================================
+// === 2. CLASSEMENT GÉNÉRAL ===
+// =========================================
+interface EquipeClassement {
+  id: number; poule_competition_id: number; competition_engagement_equipe_libelle: string;
+  structure_id: number; classement_place: number; classement_point_total: number;
+  classement_nbr_match_joue: number; classement_nbr_match_gagne: number;
+  classement_nbr_match_nul: number; classement_nbr_match_perdu: number;
+}
 const classement = ref<EquipeClassement[]>([])
 const isLoadingClassement = ref(true)
 const errorClassement = ref<Error | null>(null)
 const API_ENDPOINT_RANKING = 'http://localhost:8080/ranking'
 
 async function fetchClassement() {
-  isLoadingClassement.value = true
-  errorClassement.value = null
+  isLoadingClassement.value = true; errorClassement.value = null
   try {
     const response = await fetch(API_ENDPOINT_RANKING)
     if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`)
     const data = await response.json()
-    if (data && Array.isArray(data.docs)) {
-      classement.value = data.docs
-    } else {
-      classement.value = []
-    }
-  } catch (err) {
-    console.error('Erreur fetch classement:', err)
-    errorClassement.value = err as Error
-  } finally {
-    isLoadingClassement.value = false
-  }
+    if (data && Array.isArray(data.docs)) classement.value = data.docs
+    else classement.value = []
+  } catch (err) { errorClassement.value = err as Error } finally { isLoadingClassement.value = false }
 }
 
 // =========================================
-// === LOGIQUE RENCONTRES (Next Match) ===
+// === 3. RENCONTRES & PROCHAIN MATCH ===
 // =========================================
 const TARGET_TEAM = "SAMBRE AVESNOIS HANDBALL"
-
 interface Rencontre {
-  id: number;
-  rencontre_conclusion_info_date_match: string; // YYYY-MM-DD
-  rencontre_conclusion_info_heure_match: string; // HH:MM:SS
-  competition_engagement_equipe_libelle_1: string;
-  competition_engagement_equipe_libelle_2: string;
-  equipement_nom_salle: string;
-  ville_libelle: string;
+  id: number; rencontre_conclusion_info_date_match: string; rencontre_conclusion_info_heure_match: string;
+  competition_engagement_equipe_libelle_1: string; competition_engagement_equipe_libelle_2: string;
+  equipement_nom_salle: string; ville_libelle: string;
 }
-
 const matches = ref<Rencontre[]>([])
 const isLoadingMatches = ref(false)
 const showDetailsModal = ref(false)
-// Assurez-vous que le backend Java autorise CORS pour cette URL aussi !
 const API_ENDPOINT_RENCONTRE = 'http://localhost:8080/rencontre'
 
 async function fetchRencontres() {
   isLoadingMatches.value = true
   try {
     const res = await fetch(API_ENDPOINT_RENCONTRE)
-    if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`)
-    const data = await res.json()
-    if (data && Array.isArray(data.docs)) {
-      matches.value = data.docs
+    if (res.ok) {
+      const data = await res.json()
+      if (data && Array.isArray(data.docs)) matches.value = data.docs
     }
-  } catch (e) {
-    console.error("Erreur fetch rencontres", e)
-  } finally {
-    isLoadingMatches.value = false
-  }
+  } catch (e) { console.error("Erreur fetch rencontres", e) } finally { isLoadingMatches.value = false }
 }
 
 function getMatchDateTime(m: Rencontre): Date {
@@ -405,96 +389,35 @@ function getMatchDateTime(m: Rencontre): Date {
 }
 
 const upcomingMatches = computed(() => {
-  const now = new Date()
-  // On peut ajuster 'now' à hier pour inclure les matchs du jour même s'ils sont passés de peu
-  now.setHours(0, 0, 0, 0)
-  return matches.value
-      .filter(m => getMatchDateTime(m) >= now)
-      .sort((a, b) => getMatchDateTime(a).getTime() - getMatchDateTime(b).getTime())
+  const now = new Date(); now.setHours(0, 0, 0, 0)
+  return matches.value.filter(m => getMatchDateTime(m) >= now).sort((a, b) => getMatchDateTime(a).getTime() - getMatchDateTime(b).getTime())
 })
-
-const nextSambreMatch = computed(() => {
-  return upcomingMatches.value.find(m =>
-      m.competition_engagement_equipe_libelle_1 === TARGET_TEAM ||
-      m.competition_engagement_equipe_libelle_2 === TARGET_TEAM
-  )
-})
-
+const nextSambreMatch = computed(() => upcomingMatches.value.find(m => m.competition_engagement_equipe_libelle_1 === TARGET_TEAM || m.competition_engagement_equipe_libelle_2 === TARGET_TEAM))
 const displayNextMatch = computed(() => {
-  const m = nextSambreMatch.value
-  if (!m) return null
+  const m = nextSambreMatch.value; if (!m) return null
   const isHome = m.competition_engagement_equipe_libelle_1 === TARGET_TEAM
   const opponent = isHome ? m.competition_engagement_equipe_libelle_2 : m.competition_engagement_equipe_libelle_1
   const venue = isHome ? 'Domicile' : `Extérieur (${m.ville_libelle})`
-  const dateObj = getMatchDateTime(m)
-  // Formatage : "Sam. 28 sept • 20:30"
-  const formattedDate = new Intl.DateTimeFormat('fr-FR', {
-    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
-  }).format(dateObj).replace(',', ' •')
-
+  const formattedDate = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(getMatchDateTime(m)).replace(',', ' •')
   return { opponent, date: formattedDate, venue }
 })
 
 // --- LIFECYCLE ---
 onMounted(() => {
+  fetchTeamSummary() // <--- NOUVEL APPEL
   fetchClassement()
   fetchRencontres()
 })
 </script>
 
 <style scoped>
-/* ---- primitives visuelles proches du screen ---- */
-.card{
-  background: #fff;
-  border: 1px solid #F1F1F4;
-  border-radius: 18px;
-  box-shadow: 0 16px 36px -14px rgba(16,24,40,0.10);
-}
-
-/* bouton dégradé */
-.btn-gradient{
-  border-radius: 9999px;
-  padding: 8px 14px;
-  color: #fff;
-  font-weight: 600;
-  background: linear-gradient(90deg, #F472B6 0%, #A78BFA 100%);
-  box-shadow: 0 8px 22px rgba(244,114,182,0.25);
-}
-
-/* titre de section avec léger soulignement (proche du screen) */
-.section-title{
-  color:#6B21A8; /* violet profond */
-  font-weight:600;
-  font-size: 15px;
-  position:relative;
-  padding-bottom:.35rem;
-}
-.section-title::after{
-  content:"";
-  position:absolute; left:0; bottom:0;
-  width:210px; height:3px; border-radius:6px;
-  background: linear-gradient(90deg,#60A5FA 0%,#A78BFA 50%,#F472B6 100%);
-  opacity:.75;
-}
-
-/* chips du header */
-.stat-chip{
-  background:#FAFAFB;
-  border:1px solid #F1F1F4;
-  border-radius:14px;
-  padding:10px 12px;
-  display:flex; flex-direction:column; gap:4px;
-  box-shadow: 0 6px 16px -10px rgba(16,24,40,0.10);
-}
-
-/* KPI */
-.kpi-card{
-  background:#fff;
-  border:1px solid #F1F1F4;
-  border-radius:16px;
-  padding:18px 16px;
-  box-shadow: 0 10px 26px -16px rgba(16,24,40,0.12);
-}
+/* Identique au style précédent */
+.card{ background: #fff; border: 1px solid #F1F1F4; border-radius: 18px; box-shadow: 0 16px 36px -14px rgba(16,24,40,0.10); }
+.btn-gradient{ border-radius: 9999px; padding: 8px 14px; color: #fff; font-weight: 600; background: linear-gradient(90deg, #F472B6 0%, #A78BFA 100%); box-shadow: 0 8px 22px rgba(244,114,182,0.25); }
+.section-title{ color:#6B21A8; font-weight:600; font-size: 15px; position:relative; padding-bottom:.35rem; }
+.section-title::after{ content:""; position:absolute; left:0; bottom:0; width:210px; height:3px; border-radius:6px; background: linear-gradient(90deg,#60A5FA 0%,#A78BFA 50%,#F472B6 100%); opacity:.75; }
+.stat-chip{ background:#FAFAFB; border:1px solid #F1F1F4; border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; gap:4px; box-shadow: 0 6px 16px -10px rgba(16,24,40,0.10); }
+.kpi-card{ background:#fff; border:1px solid #F1F1F4; border-radius:16px; padding:18px 16px; box-shadow: 0 10px 26px -16px rgba(16,24,40,0.12); }
 .kpi-head{ display:flex; align-items:center; justify-content:space-between; font-size:13px; color:#6B7280; }
 .kpi-value{ margin-top:6px; font-size:28px; font-weight:700; color:#111827; line-height:1; }
 .kpi-trend{ margin-top:4px; font-size:12px; font-weight:600; }

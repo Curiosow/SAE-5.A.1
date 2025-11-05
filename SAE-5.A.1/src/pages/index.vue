@@ -47,16 +47,29 @@
         <aside class="card p-6">
           <h2 class="font-semibold text-gray-900">Prochain match</h2>
 
-          <div v-if="nextMatch" class="mt-4 flex items-center gap-3">
-            <img :src="nextMatch.logo" alt="" class="h-10 w-10 rounded-xl object-cover"/>
+          <div v-if="isLoadingMatches" class="mt-4 text-sm text-gray-500">Chargement...</div>
+
+          <div v-else-if="displayNextMatch" class="mt-4 flex items-center gap-3">
+            <div class="h-12 w-12 rounded-xl bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-400">
+              VS
+            </div>
             <div class="min-w-0">
-              <p class="text-sm font-medium text-gray-900 truncate">{{ nextMatch.opponent }}</p>
-              <p class="text-xs text-gray-500">{{ nextMatch.date }} — {{ nextMatch.venue }}</p>
+              <p class="text-sm font-medium text-gray-900 truncate" :title="displayNextMatch.opponent">
+                {{ displayNextMatch.opponent }}
+              </p>
+              <p class="text-xs text-gray-500 capitalize">
+                {{ displayNextMatch.date }} — {{ displayNextMatch.venue }}
+              </p>
             </div>
           </div>
-          <p v-else class="mt-4 text-sm text-gray-500">Aucun match à venir</p>
 
-          <button class="mt-6 w-full btn-gradient">Détails</button>
+          <p v-else-if="!isLoadingMatches" class="mt-4 text-sm text-gray-500">
+            Aucun match à venir cette saison.
+          </p>
+
+          <button @click="showDetailsModal = true" class="mt-6 w-full btn-gradient">
+            Détails du calendrier
+          </button>
         </aside>
       </div>
 
@@ -201,7 +214,8 @@
               <th class="py-2 pr-3 w-16">Pos.</th>
               <th class="py-2 pr-3">Équipe</th>
               <th class="py-2 pr-3 w-12 text-center">V</th>
-              <th class="py-2 pr-3 w-12 text-center">N</th> <th class="py-2 pr-3 w-12 text-center">D</th>
+              <th class="py-2 pr-3 w-12 text-center">N</th>
+              <th class="py-2 pr-3 w-12 text-center">D</th>
               <th class="py-2 pr-3 w-16 text-center">PTS</th>
             </tr>
             </thead>
@@ -231,25 +245,68 @@
       </section>
 
     </div>
+
+    <Teleport to="body">
+      <div v-if="showDetailsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" @click="showDetailsModal = false"></div>
+
+        <div class="relative bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-900">Prochains matchs de la ligue</h3>
+            <button @click="showDetailsModal = false" class="text-gray-400 hover:text-gray-600">
+              ✕
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-6">
+            <div v-if="isLoadingMatches" class="text-center text-gray-500 py-8">
+              Chargement des matchs...
+            </div>
+            <div v-else class="space-y-4">
+              <div
+                  v-for="match in upcomingMatches"
+                  :key="match.id"
+                  class="flex flex-col sm:flex-row items-start sm:items-center gap-4 p-4 rounded-xl border border-gray-100 bg-gray-50/50"
+                  :class="{ 'border-rose-200 bg-rose-50': match.competition_engagement_equipe_libelle_1 === TARGET_TEAM || match.competition_engagement_equipe_libelle_2 === TARGET_TEAM }"
+              >
+                <div class="min-w-[140px] text-sm">
+                  <div class="font-medium text-gray-900 capitalize">
+                    {{ new Date(match.rencontre_conclusion_info_date_match).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long' }) }}
+                  </div>
+                  <div class="text-gray-500">
+                    {{ match.rencontre_conclusion_info_heure_match.slice(0, 5) }}
+                  </div>
+                </div>
+
+                <div class="flex-1 text-sm">
+                  <div class="font-medium" :class="match.competition_engagement_equipe_libelle_1 === TARGET_TEAM ? 'text-rose-700' : 'text-gray-900'">
+                    {{ match.competition_engagement_equipe_libelle_1 }}
+                  </div>
+                  <div class="text-xs text-gray-500 my-1">VS</div>
+                  <div class="font-medium" :class="match.competition_engagement_equipe_libelle_2 === TARGET_TEAM ? 'text-rose-700' : 'text-gray-900'">
+                    {{ match.competition_engagement_equipe_libelle_2 }}
+                  </div>
+                </div>
+
+                <div class="text-xs text-gray-500 sm:text-right max-w-[150px]">
+                  {{ match.equipement_nom_salle }}<br>
+                  {{ match.ville_libelle }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue' // [MODIFIÉ] Ajout de onMounted
+import { ref, computed, onMounted } from 'vue'
 
-/* Données mock pour reproduire fidèlement le screen (Partie 1-4) */
-const summary = {
-  wins: 12, draws: 3, losses: 1, points: 39, rank: 1, form: 'V‑V‑N‑V‑V'
-}
-const nextMatch = null as null | {
-  opponent: string; date: string; venue: string; logo: string
-}
-const kpis = {
-  goals: 485, trendGoals: 12.5,
-  shotAccuracy: 68.4, trendShot: 3.2,
-  goalsAgainst: 325, trendAgainst: 2.1,
-  counters: 89, trendCounters: 8.7
-}
+// --- DONNÉES STATIQUES (Mocks) ---
+const summary = { wins: 12, draws: 3, losses: 1, points: 39, rank: 1, form: 'V‑V‑N‑V‑V' }
+const kpis = { goals: 485, trendGoals: 12.5, shotAccuracy: 68.4, trendShot: 3.2, goalsAgainst: 325, trendAgainst: 2.1, counters: 89, trendCounters: 8.7 }
 const topPlayers = [
   { id: 1, avatar: 'https://placehold.co/64x64', stat: '45 buts', accuracy: 78.5 },
   { id: 2, avatar: 'https://placehold.co/64x64', stat: '8 assistances', accuracy: 0 },
@@ -257,25 +314,17 @@ const topPlayers = [
 ]
 const dots = [7, 9, 11, 2, 6, 4, 1]
 const bubblePos = [
-  { left: '18%', top: '18%' },
-  { left: '46%', top: '12%' },
-  { left: '74%', top: '18%' },
-  { left: '22%', top: '58%' },
-  { left: '50%', top: '48%' },
-  { left: '78%', top: '58%' },
-  { left: '50%', top: '78%' },
+  { left: '18%', top: '18%' }, { left: '46%', top: '12%' }, { left: '74%', top: '18%' },
+  { left: '22%', top: '58%' }, { left: '50%', top: '48%' }, { left: '78%', top: '58%' }, { left: '50%', top: '78%' },
 ]
 const progressRows = [
-  { label: 'Possession', value: 64 },
-  { label: 'Taux de convertion des tirs', value: 72 },
-  { label: 'Tirs à 7m', value: 85 },
-  { label: 'Taux d’actions défensives', value: 58 },
+  { label: 'Possession', value: 64 }, { label: 'Taux de convertion des tirs', value: 72 },
+  { label: 'Tirs à 7m', value: 85 }, { label: 'Taux d’actions défensives', value: 58 },
 ]
 
-// [SUPPRIMÉ] La variable mock `table` a été retirée
-
-// [AJOUTÉ] Logique pour le classement dynamique (LIGNE 5)
-// --- Définition des types ---
+// =========================================
+// === LOGIQUE CLASSEMENT (Ranking) ===
+// =========================================
 interface EquipeClassement {
   id: number;
   poule_competition_id: number;
@@ -289,47 +338,108 @@ interface EquipeClassement {
   classement_nbr_match_perdu: number;
 }
 
-// --- État réactif ---
 const classement = ref<EquipeClassement[]>([])
-// J'utilise des noms spécifiques pour éviter tout conflit
 const isLoadingClassement = ref(true)
 const errorClassement = ref<Error | null>(null)
-
-// --- Endpoint de l'API ---
 const API_ENDPOINT_RANKING = 'http://localhost:8080/ranking'
 
-// --- Fonction de fetch ---
 async function fetchClassement() {
   isLoadingClassement.value = true
   errorClassement.value = null
   try {
     const response = await fetch(API_ENDPOINT_RANKING)
-    if (!response.ok) {
-      throw new Error(`Erreur HTTP: ${response.status}`)
-    }
+    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`)
     const data = await response.json()
-
     if (data && Array.isArray(data.docs)) {
       classement.value = data.docs
     } else {
-      console.warn('Format de réponse API inattendu:', data)
       classement.value = []
-      throw new Error('Format de réponse API inattendu.')
     }
   } catch (err) {
-    console.error('Erreur lors de la récupération du classement:', err)
+    console.error('Erreur fetch classement:', err)
     errorClassement.value = err as Error
   } finally {
     isLoadingClassement.value = false
   }
 }
 
-// --- Hook de cycle de vie ---
-onMounted(() => {
-  // Appelle la fonction fetchClassement() lorsque le composant est monté
-  fetchClassement()
+// =========================================
+// === LOGIQUE RENCONTRES (Next Match) ===
+// =========================================
+const TARGET_TEAM = "SAMBRE AVESNOIS HANDBALL"
+
+interface Rencontre {
+  id: number;
+  rencontre_conclusion_info_date_match: string; // YYYY-MM-DD
+  rencontre_conclusion_info_heure_match: string; // HH:MM:SS
+  competition_engagement_equipe_libelle_1: string;
+  competition_engagement_equipe_libelle_2: string;
+  equipement_nom_salle: string;
+  ville_libelle: string;
+}
+
+const matches = ref<Rencontre[]>([])
+const isLoadingMatches = ref(false)
+const showDetailsModal = ref(false)
+// Assurez-vous que le backend Java autorise CORS pour cette URL aussi !
+const API_ENDPOINT_RENCONTRE = 'http://localhost:8080/rencontre'
+
+async function fetchRencontres() {
+  isLoadingMatches.value = true
+  try {
+    const res = await fetch(API_ENDPOINT_RENCONTRE)
+    if (!res.ok) throw new Error(`Erreur HTTP: ${res.status}`)
+    const data = await res.json()
+    if (data && Array.isArray(data.docs)) {
+      matches.value = data.docs
+    }
+  } catch (e) {
+    console.error("Erreur fetch rencontres", e)
+  } finally {
+    isLoadingMatches.value = false
+  }
+}
+
+function getMatchDateTime(m: Rencontre): Date {
+  return new Date(`${m.rencontre_conclusion_info_date_match}T${m.rencontre_conclusion_info_heure_match}`)
+}
+
+const upcomingMatches = computed(() => {
+  const now = new Date()
+  // On peut ajuster 'now' à hier pour inclure les matchs du jour même s'ils sont passés de peu
+  now.setHours(0, 0, 0, 0)
+  return matches.value
+      .filter(m => getMatchDateTime(m) >= now)
+      .sort((a, b) => getMatchDateTime(a).getTime() - getMatchDateTime(b).getTime())
 })
 
+const nextSambreMatch = computed(() => {
+  return upcomingMatches.value.find(m =>
+      m.competition_engagement_equipe_libelle_1 === TARGET_TEAM ||
+      m.competition_engagement_equipe_libelle_2 === TARGET_TEAM
+  )
+})
+
+const displayNextMatch = computed(() => {
+  const m = nextSambreMatch.value
+  if (!m) return null
+  const isHome = m.competition_engagement_equipe_libelle_1 === TARGET_TEAM
+  const opponent = isHome ? m.competition_engagement_equipe_libelle_2 : m.competition_engagement_equipe_libelle_1
+  const venue = isHome ? 'Domicile' : `Extérieur (${m.ville_libelle})`
+  const dateObj = getMatchDateTime(m)
+  // Formatage : "Sam. 28 sept • 20:30"
+  const formattedDate = new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+  }).format(dateObj).replace(',', ' •')
+
+  return { opponent, date: formattedDate, venue }
+})
+
+// --- LIFECYCLE ---
+onMounted(() => {
+  fetchClassement()
+  fetchRencontres()
+})
 </script>
 
 <style scoped>

@@ -7,10 +7,37 @@
         <section class="card p-6 sm:p-8 flex flex-col relative">
           <div class="flex-1 flex items-center justify-center">
             <div
-                class="relative w-full max-w-[1100px] h-[520px] bg-[#e6e6e6] border border-gray-200 rounded-xl overflow-hidden"
+                class="relative w-full max-w-[1100px] h-[450px] bg-[#e6e6e6] border border-gray-200 rounded-xl overflow-hidden"
                 ref="heatmapContainer"
             >
               <!-- Heatmap ici -->
+
+              <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white to-transparent flex items-center justify-center">
+                <img src="C:\Users\noix\PhpstormProjects\SAE-5.A.1\SAE-5.A.1\public\Terrain de basketball minimaliste.png"
+                     alt="terrain stylisé rose et violet"
+                     class="w-full h-auto object-contain opacity-90" />
+              </div>
+
+              <!-- milieu -->
+              <div class="absolute top-1/3 left-1/2 w-16 h-16 rounded-full
+              bg-gradient-to-br from-pink-500 via-pink-400 to-purple-600
+              opacity-100 blur-sm transform -translate-x-1/2 -translate-y-2/4" >
+              </div>
+
+              <!-- gauche -->
+              <div class="absolute top-48 left-1/4 w-16 h-16 rounded-full
+              bg-gradient-to-br from-pink-500 via-pink-400 to-purple-600
+              opacity-100 blur-sm transform -translate-x-1/2 -translate-y-2/4">
+              </div>
+
+              <!-- droite -->
+              <div class="absolute top-48 left-3/4 w-16 h-16 rounded-full
+              bg-gradient-to-br from-pink-500 via-pink-400 to-purple-600
+              opacity-100 blur-sm transform -translate-x-1/2 -translate-y-2/4">
+              </div>
+
+              
+
               <button
                   v-if="!isFullscreen"
                   class="absolute top-4 right-4 btn-gradient z-10 flex items-center justify-center"

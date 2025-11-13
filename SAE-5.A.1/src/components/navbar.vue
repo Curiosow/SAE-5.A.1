@@ -1,11 +1,25 @@
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 
 const open = ref(false)
 const scrolled = ref(false)
+const router = useRouter()
 
 const onScroll = () => {
   scrolled.value = window.scrollY > 6
+}
+
+// Fonction de déconnexion
+const handleLogout = () => {
+  // Ajoutez ici votre logique de déconnexion (ex: supabase.auth.signOut(), clear localstorage...)
+  console.log('Déconnexion en cours...')
+
+  // Fermer le menu mobile si ouvert
+  open.value = false
+
+  // Redirection vers la page de login par exemple
+  router.push('/login')
 }
 
 onMounted(() => {
@@ -19,7 +33,7 @@ onBeforeUnmount(() => {
 const navItems = [
   { label: 'Accueil',    href: '/' },
   { label: 'Joueuses',   href: '/joueuses' },
-  { label: 'Upload', href: '/analyse' },
+  { label: 'Upload',     href: '/analyse' },
   { label: 'Heatmaps',   href: '/heatmap' },
 ]
 </script>
@@ -33,7 +47,6 @@ const navItems = [
         aria-label="Global"
     >
       <nav class="flex h-14 items-center justify-between">
-        <!-- Logo -->
         <div class="flex min-w-0 flex-1 items-center gap-3">
           <router-link
               to="/"
@@ -55,7 +68,6 @@ const navItems = [
           </span>
         </div>
 
-        <!-- ✅ Desktop navigation -->
         <div class="hidden lg:flex items-center gap-3">
           <router-link
               v-for="item in navItems"
@@ -67,24 +79,16 @@ const navItems = [
           </router-link>
         </div>
 
-        <!-- Actions -->
         <div class="hidden lg:flex min-w-0 flex-1 justify-end items-center gap-3">
-          <router-link
-              to="/login"
-              class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
-          >
-            <span class="relative z-[1]">Connexion</span>
-          </router-link>
-          <router-link
-              to="/register"
+          <button
+              @click="handleLogout"
               class="rounded-xl bg-white/10 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm
-                   ring-1 ring-white/15 hover:bg-white/15 transition"
+                   ring-1 ring-white/15 hover:bg-white/15 hover:text-rose-200 transition"
           >
-            Créer un compte
-          </router-link>
+            Déconnexion
+          </button>
         </div>
 
-        <!-- Bouton mobile -->
         <button
             type="button"
             class="lg:hidden inline-flex items-center justify-center rounded-xl p-2 text-white hover:bg-white/10
@@ -106,7 +110,6 @@ const navItems = [
       </nav>
     </div>
 
-    <!-- Overlay mobile -->
     <div
         class="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] transition-opacity lg:hidden"
         :class="open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
@@ -114,7 +117,6 @@ const navItems = [
         aria-hidden="true"
     />
 
-    <!-- ✅ Menu mobile -->
     <div
         id="mobile-menu"
         class="fixed right-0 top-0 z-50 h-full w-full max-w-sm p-4 sm:p-6
@@ -123,7 +125,7 @@ const navItems = [
         role="dialog"
         aria-modal="true"
     >
-      <div class="liquid-glass h-full rounded-l-2xl p-6 glass-scrolled">
+      <div class="liquid-glass h-full rounded-l-2xl p-6 glass-scrolled flex flex-col">
         <div class="flex items-center justify-between">
           <router-link
               to="/"
@@ -152,7 +154,7 @@ const navItems = [
           </button>
         </div>
 
-        <div class="mt-8 space-y-2">
+        <div class="mt-8 space-y-2 flex-1">
           <router-link
               v-for="item in navItems"
               :key="item.label"
@@ -164,23 +166,14 @@ const navItems = [
           </router-link>
         </div>
 
-        <div class="mt-8 border-t border-white/10 pt-6 space-y-3">
-          <router-link
-              to="/login"
-              class="block rounded-xl px-4 py-3 text-base font-semibold text-white/90 hover:text-white
-                   hover:bg-white/10 ring-1 ring-transparent hover:ring-white/10 transition"
-              @click="open = false"
+        <div class="mt-8 border-t border-white/10 pt-6">
+          <button
+              @click="handleLogout"
+              class="w-full block rounded-xl bg-white/10 px-4 py-3 text-base font-semibold text-white
+                   backdrop-blur-sm ring-1 ring-white/15 hover:bg-white/15 hover:text-rose-200 transition text-left"
           >
-            Connexion
-          </router-link>
-          <router-link
-              to="/register"
-              class="block rounded-xl bg-white/10 px-4 py-3 text-base font-semibold text-white
-                   backdrop-blur-sm ring-1 ring-white/15 hover:bg-white/15 transition"
-              @click="open = false"
-          >
-            Créer un compte
-          </router-link>
+            Déconnexion
+          </button>
         </div>
       </div>
     </div>

@@ -1,28 +1,35 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 
 const open = ref(false)
 const scrolled = ref(false)
 const router = useRouter()
 
+const firstName = ref<string | null>(null)
+const account_type = ref<string | null>(null)
+
 const onScroll = () => {
   scrolled.value = window.scrollY > 6
 }
 
-// Fonction de déconnexion
 const handleLogout = () => {
-  // Ajoutez ici votre logique de déconnexion (ex: supabase.auth.signOut(), clear localstorage...)
   console.log('Déconnexion en cours...')
 
-  // Fermer le menu mobile si ouvert
+  localStorage.removeItem('auth_token')
+  localStorage.removeItem('account_type')
+  localStorage.removeItem('last_name')
+  localStorage.removeItem('first_name')
+  localStorage.removeItem('email')
+
   open.value = false
 
-  // Redirection vers la page de login par exemple
   router.push('/login')
 }
 
 onMounted(() => {
+  firstName.value = typeof window !== 'undefined' ? localStorage.getItem('first_name') : null
+  account_type.value = typeof window !== 'undefined' ? localStorage.getItem('account_type') : null
   onScroll()
   window.addEventListener('scroll', onScroll, { passive: true })
 })
@@ -30,12 +37,22 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', onScroll)
 })
 
-const navItems = [
-  { label: 'Accueil',    href: '/' },
-  { label: 'Joueuses',   href: '/joueuses' },
-  { label: 'Upload',     href: '/analyse' },
-  { label: 'Heatmaps',   href: '/heatmap' },
+const globalItems = [
+  { label: 'Accueil', href: '/' },
 ]
+
+const coachItems = [
+  { label: 'Joueuses', href: '/joueuses' },
+  { label: 'Upload', href: '/analyse' },
+  { label: 'Heatmaps', href: '/heatmap' },
+]
+
+const playerItems = [
+  { label: 'Heatmaps', href: '/heatmap' },
+]
+
+const isCoach = computed(() => account_type.value === 'coach')
+const isPlayer = computed(() => account_type.value === 'player')
 </script>
 
 <template>
@@ -64,14 +81,38 @@ const navItems = [
           <span class="hidden sm:inline-block h-5 w-px bg-white/10"></span>
 
           <span class="hidden min-w-0 truncate text-sm text-white/70 sm:block">
-            Dashboard Handball
+            Dashboard Handball - Bienvenue {{ firstName }}
           </span>
         </div>
 
         <div class="hidden lg:flex items-center gap-3">
           <router-link
-              v-for="item in navItems"
-              :key="item.label"
+              v-for="item in globalItems"
+              :key="'global-' + item.label"
+              :to="item.href"
+              class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
+          >
+            <span class="relative z-[1]">{{ item.label }}</span>
+          </router-link>
+
+          <span v-if="isCoach && coachItems.length" class="hidden sm:inline-block h-5 w-px bg-white/10"></span>
+
+          <router-link
+              v-if="isCoach"
+              v-for="item in coachItems"
+              :key="'coach-' + item.label"
+              :to="item.href"
+              class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
+          >
+            <span class="relative z-[1]">{{ item.label }}</span>
+          </router-link>
+
+          <span v-if="isPlayer && playerItems.length" class="hidden sm:inline-block h-5 w-px bg-white/10"></span>
+
+          <router-link
+              v-if="isPlayer"
+              v-for="item in playerItems"
+              :key="'player-' + item.label"
               :to="item.href"
               class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
           >
@@ -155,15 +196,41 @@ const navItems = [
         </div>
 
         <div class="mt-8 space-y-2 flex-1">
-          <router-link
-              v-for="item in navItems"
-              :key="item.label"
-              :to="item.href"
-              class="seg-link block relative text-base font-medium text-white/90 transition-colors px-4 py-2 rounded-full w-full"
-              @click="open = false"
-          >
-            <span class="relative z-[1]">{{ item.label }}</span>
-          </router-link>
+          <div class="space-y-2">
+            <router-link
+                v-for="item in globalItems"
+                :key="'global-' + item.label"
+                :to="item.href"
+                class="seg-link block relative text-base font-medium text-white/90 transition-colors px-4 py-2 rounded-full w-full"
+                @click="open = false"
+            >
+              <span class="relative z-[1]">{{ item.label }}</span>
+            </router-link>
+          </div>
+
+          <div v-if="isCoach" class="space-y-2 pt-4 border-t border-white/10">
+            <router-link
+                v-for="item in coachItems"
+                :key="'coach-' + item.label"
+                :to="item.href"
+                class="seg-link block relative text-base font-medium text-white/90 transition-colors px-4 py-2 rounded-full w-full"
+                @click="open = false"
+            >
+              <span class="relative z-[1]">{{ item.label }}</span>
+            </router-link>
+          </div>
+
+          <div v-if="isPlayer" class="space-y-2 pt-4 border-t border-white/10">
+            <router-link
+                v-for="item in playerItems"
+                :key="'player-' + item.label"
+                :to="item.href"
+                class="seg-link block relative text-base font-medium text-white/90 transition-colors px-4 py-2 rounded-full w-full"
+                @click="open = false"
+            >
+              <span class="relative z-[1]">{{ item.label }}</span>
+            </router-link>
+          </div>
         </div>
 
         <div class="mt-8 border-t border-white/10 pt-6">

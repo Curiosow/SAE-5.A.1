@@ -1,12 +1,72 @@
+<script setup lang="ts">
+import { ref, computed } from "vue";
+import { useRouter, useRoute } from 'vue-router'
+
+const router = useRouter()
+const route = useRoute()
+
+const loading = ref(false)
+const errorMsg = ref<string | null>(null)
+
+const user = ref({
+  firstname: "",
+  lastname: "",
+  email: "",
+  password: ""
+});
+
+// Validation email
+const emailValid = computed(() =>
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(user.value.email)
+)
+
+// Autorisation du bouton
+const canSubmit = computed(() =>
+    !loading.value && user.value.firstname.trim() !== '' && user.value.lastname.trim() !== '' && user.value.email.trim() !== '' && user.value.password.trim() !== '' && emailValid.value
+)
+
+async function submitRegister() {
+  errorMsg.value = null
+  loading.value = true
+  
+  try {
+    const res = await fetch('http://localhost:8080/auth/register_coach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ email: user.value.email, password: user.value.password, firstName: user.value.firstname, lastName: user.value.lastname }),
+    })
+
+  if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body.message || `Erreur ${res.status}`)
+    }
+
+    const mockToken = 'mock-token-' + Math.random().toString(36).substring(2) + '-' + Date.now()
+    localStorage.setItem('auth_token', mockToken)
+
+    const redirect = (route.query.redirect as string) || '/'
+    await router.push(redirect)
+  } catch (err: any) {
+      errorMsg.value = err?.message || 'Erreur lors de l\'inscription'
+  } finally {
+    loading.value = false
+  }
+};
+
+function onSubmitForm(e: Event) {
+  e.preventDefault()
+  submitRegister()
+}
+
+</script>
+
 <template>
   <main class="min-h-screen flex items-center justify-center bg-[#F7F7FB]">
     <section class="w-full max-w-xl bg-white border border-[#F1F1F4] rounded-[18px] shadow-[0_16px_36px_-14px_rgba(16,24,40,0.10)] p-12">
       <h1 class="text-[28px] font-semibold text-[#5B21B6] mb-10 pb-[.35rem] relative text-center">
         Inscription
-        <span class="absolute left-1/2 -translate-x-1/2 bottom-0 w-[260px] h-[3px] rounded-[6px] opacity-75"
-              style="background:linear-gradient(90deg,#60A5FA_0%,#A78BFA_50%,#F472B6_100%);"></span>
       </h1>
-      <form @submit.prevent="register" class="flex flex-col gap-8">
+      <form @submit="onSubmitForm" class="flex flex-col gap-8">
         <!-- ...champs du formulaire... -->
         <div>
           <label class="block text-base font-medium text-gray-700 mb-2" for="firstname">Prénom</label>
@@ -60,7 +120,7 @@
         </button>
       </form>
       <router-link
-          to="/connexion"
+          to="/login"
           class="block mt-8 text-center text-[#A78BFA] font-semibold hover:underline transition"
       >
         &#8592; Retour à la connexion
@@ -68,19 +128,3 @@
     </section>
   </main>
 </template>
-
-<script setup lang="ts">
-import { ref } from "vue";
-
-const user = ref({
-  firstname: "",
-  lastname: "",
-  email: "",
-  password: ""
-});
-
-const register = () => {
-  console.log("Inscription :", user.value);
-  // logique d'inscription ici
-};
-</script>

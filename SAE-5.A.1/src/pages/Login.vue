@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
-import './Login.css' // 🔹 Import du CSS externe
+import { useRouter, useRoute } from 'vue-router'
+import './CSS/Login.css'
 
 const email = ref('')
 const password = ref('')
@@ -9,6 +9,7 @@ const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 
 const router = useRouter()
+const route = useRoute()
 
 // Validation email
 const emailValid = computed(() =>
@@ -29,10 +30,10 @@ async function submitLogin() {
 
   loading.value = true
   try {
-    const res = await fetch('/api/auth/login', {
+    const res = await fetch('http://localhost:8080/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value, password: password.value }),
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ email: email.value, password: password.value }),
     })
 
     if (!res.ok) {
@@ -40,17 +41,45 @@ async function submitLogin() {
       throw new Error(body.message || `Erreur ${res.status}`)
     }
 
-    const data = await res.json()
-    if (data.token) {
-      localStorage.setItem('auth_token', data.token)
-    }
+    const mockToken = 'mock-token-' + Math.random().toString(36).substring(2) + '-' + Date.now()
+    localStorage.setItem('auth_token', mockToken)
 
-    await router.push({ name: 'Dashboard' })
+    getAllInformations()
   } catch (err: any) {
     errorMsg.value = err?.message || 'Erreur lors de la connexion'
   } finally {
     loading.value = false
   }
+}
+
+async function getAllInformations() {
+    errorMsg.value = null
+    loading.value = true
+
+    try {
+      const url = 'http://localhost:8080/auth/userbymail?' + new URLSearchParams({ email: email.value }).toString()
+      const res = await fetch(url, {
+        method: 'GET',
+      })
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.message || `Erreur ${res.status}`)
+      }
+
+      const userData = await res.json()
+      localStorage.setItem('account_type', userData.account_type)
+      localStorage.setItem('last_name', userData.last_name)
+      localStorage.setItem('first_name', userData.first_name)
+      localStorage.setItem('email', userData.email)
+
+      const redirect = (route.query.redirect as string) || '/'
+      await router.push(redirect)
+    } catch (err: any) {
+      errorMsg.value = err?.message || 'Erreur lors de la récupération des informations'
+    } finally {
+      loading.value = false
+    }
 }
 
 function onSubmitForm(e: Event) {
@@ -97,7 +126,7 @@ function onSubmitForm(e: Event) {
 
       <p class="small">
         Pas encore de compte ?
-        <router-link to="/signup">S'inscrire</router-link>
+        <router-link to="/register">S'inscrire</router-link>
       </p>
     </form>
   </main>

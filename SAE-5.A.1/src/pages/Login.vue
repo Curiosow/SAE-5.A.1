@@ -123,11 +123,6 @@ function onSubmitForm(e: Event) {
         <span v-if="!loading">Se connecter</span>
         <span v-else>Connexion…</span>
       </button>
-
-      <p class="small">
-        Pas encore de compte ?
-        <router-link to="/register">S'inscrire</router-link>
-      </p>
     </form>
   </main>
 </template>

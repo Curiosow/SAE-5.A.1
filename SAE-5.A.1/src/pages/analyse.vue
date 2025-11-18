@@ -139,6 +139,8 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 
+definePageMeta({ roles: ['coach'] })
+
 const tabs = ['Performance', 'Précision', 'Avancés', 'Heat Map']
 const activeTab = ref('Performance')
 

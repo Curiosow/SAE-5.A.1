@@ -8,4 +8,12 @@ export default defineNuxtRouteMiddleware((to) => {
   if (!token) {
     return navigateTo(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
   }
+
+  const roles = (to.meta as any)?.roles as string[] | undefined
+  if (roles && roles.length) {
+    const userRole = localStorage.getItem('account_type')
+    if (!userRole || !roles.includes(userRole)) {
+      return navigateTo('/')
+    }
+  }
 })

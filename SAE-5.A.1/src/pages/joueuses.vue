@@ -208,6 +208,8 @@
 
   <script setup lang="ts">
   import { ref, onMounted, computed } from 'vue'
+  
+  definePageMeta({ roles: ['coach'] })
 
   interface Stats {
     def_duels_gagnes?: number

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 
+definePageMeta({ roles: ['coach'] })
+
 const menuItems = ['Membres', 'Coach', 'Joueuses']
 const selectedMenu = ref('Membres')
 const search = ref('')
@@ -371,7 +373,7 @@ watch(selectedMenu, fetchMembers)
 </script>
 <template>
   <div class="min-h-screen bg-[#F7F7FB] flex">
-    <aside class="bg-white border border-[#F1F1F4] rounded-[18px] shadow-[0_16px_36px_-14px_rgba(16,24,40,0.10)] w-32 min-w-[8rem] mr-6 mt-8 ml-4 p-5 flex flex-col">
+    <aside class="bg-white border border-[#F1F1F4] rounded-[18px] shadow-[0_16px_36px_-14px_rgba(16,24,40,0.10)] w-48 min-w-[8rem] mr-6 mt-8 ml-4 p-5 flex flex-col">
       <h2 class="text-lg font-bold mb-6 text-[#5B21B6]">Paramètres</h2>
       <nav class="space-y-2">
         <button

@@ -1,5 +1,7 @@
 <script setup lang="ts">
 
+definePageMeta({ roles: ['coach'] })
+
 </script>
 
 <template>

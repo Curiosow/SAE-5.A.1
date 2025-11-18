@@ -10,7 +10,7 @@
                 class="relative w-full max-w-[1100px] h-[450px] bg-[#e6e6e6] border border-gray-200 rounded-xl overflow-hidden"
                 ref="heatmapContainer"
             >
-              <!-- Heatmap ici -->
+              <!-- Heatmap -->
 
               <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white to-transparent flex items-center justify-center">
                 <img src="C:\Users\noix\PhpstormProjects\SAE-5.A.1\SAE-5.A.1\public\Terrain de basketball minimaliste.png"
@@ -19,24 +19,52 @@
               </div>
 
               <!-- milieu -->
-              <div class="absolute top-1/3 left-1/2 w-16 h-16 rounded-full
+              <div class="absolute top-1/3 left-1/2 transform -translate-x-1/2 -translate-y-2/4 group">
+
+                <!-- Tooltip -->
+                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
+              bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-lg text-sm">
+                  test test test test test
+                </div>
+
+                <div class="w-16 h-16 rounded-full
               bg-gradient-to-br from-pink-500 via-pink-400 to-purple-600
-              opacity-100 blur-sm transform -translate-x-1/2 -translate-y-2/4" >
+              opacity-100 blur-sm">
+                </div>
               </div>
+
 
               <!-- gauche -->
-              <div class="absolute top-48 left-1/4 w-16 h-16 rounded-full
+              <div class="absolute top-48 left-1/4 transform -translate-x-1/2 -translate-y-2/4 group">
+
+                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
+              bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
+                  test test test test test
+                </div>
+
+                <div class="w-16 h-16 rounded-full
               bg-gradient-to-br from-pink-500 via-pink-400 to-purple-600
-              opacity-100 blur-sm transform -translate-x-1/2 -translate-y-2/4">
+              opacity-100 blur-sm">
+                </div>
               </div>
+
 
               <!-- droite -->
-              <div class="absolute top-48 left-3/4 w-16 h-16 rounded-full
+              <div class="absolute top-48 left-3/4 transform -translate-x-1/2 -translate-y-2/4 group">
+
+                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
+              bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
+                  test test test test test
+                </div>
+
+                <div class="w-16 h-16 rounded-full
               bg-gradient-to-br from-pink-500 via-pink-400 to-purple-600
-              opacity-100 blur-sm transform -translate-x-1/2 -translate-y-2/4">
+              opacity-100 blur-sm">
+                </div>
               </div>
 
-              
+
+
 
               <button
                   v-if="!isFullscreen"

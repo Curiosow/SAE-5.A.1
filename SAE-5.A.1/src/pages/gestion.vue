@@ -42,10 +42,11 @@ function startEditFirstName(member: any) {
 }
 async function saveFirstName(member: any) {
   if (!editingFirstName.value.trim()) { editingPlayerEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_player_firstname', {
+  await fetch('http://localhost:8080/auth/update_information', {
+
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, newFirstName: editingFirstName.value })
+    body: new URLSearchParams({ coach: 'false', type: 'first_name', newValue: editingFirstName.value, email: member.email })
   })
   member.firstName = editingFirstName.value
   editingPlayerEmail.value = null
@@ -61,10 +62,10 @@ function startEditLastName(member: any) {
 }
 async function saveLastName(member: any) {
   if (!editingLastNameValue.value.trim()) { editingLastName.value = null; return }
-  await fetch('http://localhost:8080/auth/update_player_lastname', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, newLastName: editingLastNameValue.value })
+    body: new URLSearchParams({ coach: 'false', type: 'last_name', newValue: editingLastNameValue.value, email: member.email })
   })
   member.lastName = editingLastNameValue.value
   editingLastName.value = null
@@ -83,7 +84,7 @@ async function saveJerseyNumber(member: any) {
   await fetch('http://localhost:8080/auth/update_player_number', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, jerseyNumber: editingJerseyNumberValue.value.toString() })
+    body: new URLSearchParams({ coach: 'false', type: 'jersey_number', newValue: editingJerseyNumberValue.value, email: member.email })
   })
   member.jerseyNumber = editingJerseyNumberValue.value
   editingJerseyNumber.value = null

@@ -9,6 +9,8 @@ const search = ref('')
 const showModal = ref(false)
 const members = ref<any[]>([])
 const tableColumns = ref<string[]>(['Nom', 'Prénom', 'Adresse e-mail', 'Type de compte'])
+const deletingPlayerEmail = ref<string | null>(null)
+const resettingPlayerEmail = ref<string | null>(null)
 
 // Dropdown players helper (affiche la liste des joueuses pour une ligne)
 const playersDropdownForEmail = ref<string | null>(null)
@@ -81,10 +83,10 @@ function startEditJerseyNumber(member: any) {
 }
 async function saveJerseyNumber(member: any) {
   if (editingJerseyNumberValue.value === '' || editingJerseyNumberValue.value === null) { editingJerseyNumber.value = null; return }
-  await fetch('http://localhost:8080/auth/update_player_number', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ coach: 'false', type: 'jersey_number', newValue: editingJerseyNumberValue.value, email: member.email })
+    body: new URLSearchParams({ coach: 'false', type: 'jersey_number', newValue: editingJerseyNumberValue.value.toString(), email: member.email })
   })
   member.jerseyNumber = editingJerseyNumberValue.value
   editingJerseyNumber.value = null
@@ -100,10 +102,10 @@ function startEditHeight(member: any) {
 }
 async function saveHeight(member: any) {
   if (editingHeightValue.value === '' || editingHeightValue.value === null) { editingHeightEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_player_height', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, heightCm: editingHeightValue.value.toString() })
+    body: new URLSearchParams({ coach: 'false', type: 'height_cm', newValue: editingHeightValue.value.toString(), email: member.email })
   })
   member.heightCm = editingHeightValue.value
   editingHeightEmail.value = null
@@ -119,10 +121,10 @@ function startEditBirthDate(member: any) {
 }
 async function saveBirthDate(member: any) {
   if (!editingBirthDateValue.value.trim()) { editingBirthDateEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_player_birthdate', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, birthDate: editingBirthDateValue.value })
+    body: new URLSearchParams({ coach: 'false', type: 'birth_date', newValue: editingBirthDateValue.value, email: member.email })
   })
   member.birthDate = editingBirthDateValue.value
   editingBirthDateEmail.value = null
@@ -138,10 +140,10 @@ function startEditEmail(member: any) {
 }
 async function saveEmail(member: any) {
   if (!editingEmailValue.value.trim()) { editingEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_player_email', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ oldEmail: member.email, newEmail: editingEmailValue.value })
+    body: new URLSearchParams({ coach: 'false', type: 'email', newValue: editingEmailValue.value, email: member.email })
   })
   member.email = editingEmailValue.value
   editingEmail.value = null
@@ -151,12 +153,69 @@ async function saveEmail(member: any) {
 // Actif joueur
 async function toggleActive(member: any) {
   const newActive = member.isActive === 'Oui' ? false : true
-  await fetch('http://localhost:8080/auth/update_player_active', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, isActive: newActive.toString() })
+    body: new URLSearchParams({ coach: 'false', type: 'is_active', newValue: newActive.toString(), email: member.email })
+
   })
   member.isActive = newActive ? 'Oui' : 'Non'
+}
+
+function buildDefaultPlayerPassword(member: any) {
+  const lastName = (member.lastName || '').toString().trim().toUpperCase()
+  const firstName = (member.firstName || '').toString().trim().toUpperCase()
+  return `${lastName}-${firstName}`
+}
+
+async function resetPlayerPassword(member: any) {
+  const newPassword = buildDefaultPlayerPassword(member)
+  if (!newPassword || newPassword === '-') {
+    alert('Impossible de générer le mot de passe par défaut (nom/prénom manquants).')
+    return
+  }
+  resettingPlayerEmail.value = member.email
+  try {
+    const response = await fetch('http://localhost:8080/auth/update_information', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        coach: 'false',
+        type: 'password',
+        newValue: newPassword,
+        email: member.email
+      })
+    })
+    if (!response.ok) {
+      const errorText = await response.text()
+      alert('Erreur lors de la réinitialisation du mot de passe :\n' + errorText)
+      return
+    }
+    alert(`Mot de passe réinitialisé : ${newPassword}`)
+  } finally {
+    resettingPlayerEmail.value = null
+  }
+}
+
+async function deletePlayer(member: any) {
+  const confirmation = confirm(`Supprimer le compte de ${member.firstName || ''} ${member.lastName || ''} ?`)
+  if (!confirmation) return
+  deletingPlayerEmail.value = member.email
+  try {
+    const response = await fetch('http://localhost:8080/auth/delete_player', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ email: member.email })
+    })
+    if (!response.ok) {
+      const errorText = await response.text()
+      alert('Erreur lors de la suppression de la joueuse :\n' + errorText)
+      return
+    }
+    members.value = members.value.filter((m) => m.email !== member.email)
+  } finally {
+    deletingPlayerEmail.value = null
+  }
 }
 
 // --- Édition inline (coach) ---
@@ -168,10 +227,11 @@ function startEditCoachFirstName(member: any) {
 }
 async function saveCoachFirstName(member: any) {
   if (!editingCoachFirstNameValue.value.trim()) { editingCoachFirstNameEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_coach_firstname', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, newFirstName: editingCoachFirstNameValue.value })
+    body: new URLSearchParams({ coach: 'true', type: 'first_name', newValue: editingCoachFirstNameValue.value, email: member.email })
+
   })
   member.firstName = editingCoachFirstNameValue.value
   editingCoachFirstNameEmail.value = null
@@ -186,10 +246,11 @@ function startEditCoachLastName(member: any) {
 }
 async function saveCoachLastName(member: any) {
   if (!editingCoachLastNameValue.value.trim()) { editingCoachLastNameEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_coach_lastname', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, newLastName: editingCoachLastNameValue.value })
+    body: new URLSearchParams({ coach: 'true', type: 'last_name', newValue: editingCoachLastNameValue.value, email: member.email })
+
   })
   member.lastName = editingCoachLastNameValue.value
   editingCoachLastNameEmail.value = null
@@ -204,10 +265,11 @@ function startEditCoachEmail(member: any) {
 }
 async function saveCoachEmail(member: any) {
   if (!editingCoachEmailValue.value.trim()) { editingCoachEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_coach_email', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ oldEmail: member.email, newEmail: editingCoachEmailValue.value })
+    body: new URLSearchParams({ coach: 'true', type: 'email', newValue: editingCoachEmailValue.value, email: member.email })
+
   })
   member.email = editingCoachEmailValue.value
   editingCoachEmail.value = null
@@ -216,10 +278,11 @@ async function saveCoachEmail(member: any) {
 
 async function toggleCoachActive(member: any) {
   const newActive = member.isActive === 'Oui' ? false : true
-  await fetch('http://localhost:8080/auth/update_coach_active', {
+  await fetch('http://localhost:8080/auth/update_information', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ email: member.email, isActive: newActive.toString() })
+    body: new URLSearchParams({ coach: 'true', type: 'is_active', newValue: newActive.toString(), email: member.email })
+
   })
   member.isActive = newActive ? 'Oui' : 'Non'
 }
@@ -229,7 +292,7 @@ function setTableColumns() {
   if (selectedMenu.value === 'Coach') {
     tableColumns.value = ['Nom', 'Prénom', 'Adresse e-mail', 'Actif']
   } else if (selectedMenu.value === 'Joueuses') {
-    tableColumns.value = ['Nom', 'Prénom', 'Équipe', 'Adresse e-mail', 'Numéro de maillot', 'Date de naissance', 'Taille (cm)', 'Active']
+    tableColumns.value = ['Nom', 'Prénom', 'Équipe', 'Adresse e-mail', 'Numéro de maillot', 'Date de naissance', 'Taille (cm)', 'Active', 'Actions']
   } else {
     tableColumns.value = ['Nom', 'Prénom', 'Adresse e-mail', 'Type de compte']
   }
@@ -317,7 +380,8 @@ async function addMember() {
       firstName: newMember.value.firstName,
       lastName: newMember.value.lastName,
       email: newMember.value.email,
-      isActive: 'Oui'
+      isActive: 'Oui',
+      team_id: ''
     })
   } else if (newMember.value.role === 'Joueuse') {
     const params: any = {
@@ -396,7 +460,7 @@ watch(selectedMenu, fetchMembers)
             <div>
               <h1 class="text-2xl font-bold text-[#5B21B6]">Membres</h1>
               <p class="text-gray-500 text-sm">
-                Liste de tous les utilisateurs du workspace
+                Visualisez et gérez les membres de votre club.
               </p>
             </div>
             <button
@@ -638,6 +702,22 @@ watch(selectedMenu, fetchMembers)
         >
           {{ member.isActive }}
         </span>
+                  </td>
+                  <td class="py-3 px-4 space-x-2">
+                    <button
+                        class="px-3 py-1 text-xs rounded-full border border-gray-200 text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        @click="resetPlayerPassword(member)"
+                        :disabled="resettingPlayerEmail === member.email || deletingPlayerEmail === member.email"
+                    >
+                      Réinitialiser MDP
+                    </button>
+                    <button
+                        class="px-3 py-1 text-xs rounded-full border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        @click="deletePlayer(member)"
+                        :disabled="deletingPlayerEmail === member.email || resettingPlayerEmail === member.email"
+                    >
+                      Supprimer
+                    </button>
                   </td>
                 </template>
 

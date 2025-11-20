@@ -2,378 +2,347 @@
   <main class="min-h-screen bg-[#F7F7FB]">
     <div class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 pt-24 pb-16">
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
+
         <section class="card p-6 sm:p-8 flex flex-col relative">
+
+          <div v-if="isLoading" class="absolute inset-0 z-20 bg-white/80 flex items-center justify-center rounded-xl">
+            <div class="flex flex-col items-center gap-3">
+              <div class="animate-spin rounded-full h-10 w-10 border-4 border-rose-500 border-t-transparent"></div>
+              <p class="text-sm text-gray-500 font-medium">Analyse des statistiques...</p>
+            </div>
+          </div>
+
           <div class="flex-1 flex items-center justify-center">
-            <div
-                class="relative w-full max-w-[1100px] h-[450px] bg-[#e6e6e6] border border-gray-200 rounded-xl overflow-hidden"
-                ref="heatmapContainer"
-            >
+            <div class="relative w-full max-w-[1100px] bg-white border border-gray-200 rounded-xl overflow-hidden shadow-inner group/map" ref="heatmapContainer">
 
-              <div class="absolute top-4 left-4 z-50 bg-white p-3 rounded-lg shadow-xl border border-gray-200">
-                <label for="colorRange" class="text-base font-semibold text-gray-700 block mb-1">
-                  Intensité des Zones :
-                </label>
-                <div class="flex items-center space-x-2">
-                  <span class="text-blue-500 font-medium text-sm">Froid</span>
-                  <input type="range" id="colorRange" min="0" max="100" value="50"
-                         oninput="updateHeatmapColors(this.value)"
-                         class="w-64 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer range-lg">
-                  <span class="text-red-600 font-medium text-sm">Chaud</span>
+              <img src="/Terrain de basketball minimaliste.png" alt="Terrain" class="w-full h-auto object-contain opacity-90 select-none pointer-events-none relative z-0" />
+
+              <div v-for="(zone, key) in (isDebugMode ? debugPoints : heatmapPoints)" :key="key"
+                   class="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center group transition-all duration-500"
+                   :style="{ top: zone.y + '%', left: zone.x + '%' }">
+
+                <div class="rounded-full transition-all duration-500 ease-out blur-md mix-blend-multiply"
+                     :class="{'ring-1 ring-black/20': isDebugMode}"
+                     :style="getStyle(zone.count)">
+                </div>
+
+                <div class="absolute w-1 h-1 bg-black/20 rounded-full"></div>
+
+                <div class="hidden group-hover:block absolute bottom-full mb-2 bg-slate-900 text-white text-xs font-bold px-3 py-2 rounded-lg shadow-xl whitespace-nowrap z-50 pointer-events-none">
+                  <div class="mb-1 text-slate-400 uppercase text-[10px]">{{ zone.label }}</div>
+                  <div class="text-lg leading-none">{{ zone.count }} <span class="text-[10px] font-normal text-slate-400">actions</span></div>
+                  <div v-if="zone.goals > 0" class="mt-1 pt-1 border-t border-slate-700 text-green-400">
+                    {{ Math.round((zone.goals / zone.count) * 100) }}% réussite
+                  </div>
                 </div>
               </div>
 
-
-              <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white to-transparent flex items-center justify-center">
-                <img src="/Terrain de basketball minimaliste.png"
-                     alt="terrain stylisé rose et violet"
-                     class="w-full h-auto object-contain opacity-90" />
+              <div class="absolute top-4 right-4 z-10 px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider shadow-sm backdrop-blur-md"
+                   :class="selectedContext === 'defense' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'">
+                {{ selectedContext === 'defense' ? '🛡️ Buts/Tirs Encaissés' : '🤾 Tirs de l\'équipe' }}
               </div>
 
-
-
-              <div class="boule absolute top-36 left-60 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  2
+              <div class="absolute top-4 left-4 z-30 flex flex-col gap-2">
+                <div class="bg-white/90 backdrop-blur p-3 rounded-xl shadow-lg border border-gray-100 w-48">
+                  <label class="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2 flex justify-between">
+                    <span>Intensité</span>
+                    <span>{{ intensity }}%</span>
+                  </label>
+                  <input type="range" min="10" max="200" v-model.number="intensity" class="w-full h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-slate-900">
                 </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
 
-              <div class="boule absolute top-36 right-44 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  3
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
+                <div class="bg-white/90 backdrop-blur p-2 rounded-xl shadow-sm border border-gray-100 flex items-center gap-2">
+                  <input type="checkbox" id="debugMode" v-model="isDebugMode" class="accent-indigo-600 w-4 h-4 cursor-pointer">
+                  <label for="debugMode" class="text-xs font-bold text-gray-600 cursor-pointer select-none">Mode Debug (Voir zones)</label>
                 </div>
               </div>
 
-              <div class="boule absolute top-72 right-20 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  4
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-72 left-36 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  5
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-56 left-52 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  6
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-56 right-36 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  7
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-48 right-56 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  8
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-48 left-72 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  9
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-44 left-1/2 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-lg text-sm">
-                  10
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-32 left-1/2 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-lg text-sm">
-                  1
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-20 right-40 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  11
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-20 left-56 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-md text-sm">
-                  12
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <div class="boule absolute top-16 left-1/2 transform -translate-x-1/2 -translate-y-2/4 group">
-                <div class="hidden group-hover:block absolute top-20 left-1/2 -translate-x-1/2
-                            bg-pink-100/90 text-black px-3 py-1 rounded-lg shadow-lg text-sm">
-                  13
-                </div>
-                <div class="w-16 h-16 rounded-full heatmap-effect opacity-100">
-                </div>
-              </div>
-
-              <button
-                  v-if="!isFullscreen"
-                  class="absolute top-4 right-4 btn-gradient z-10 flex items-center justify-2xl"
-                  @click="goFullscreen"
-                  aria-label="Plein écran"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <rect x="4" y="4" width="16" height="16" rx="3" stroke-width="2"/>
-                  <path d="M8 8h.01M16 8h.01M8 16h.01M16 16h.01" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-              <button
-                  v-if="isFullscreen"
-                  class="absolute top-4 right-4 btn-gradient z-10 flex items-center justify-2xl"
-                  @click="exitFullscreen"
-                  aria-label="Quitter le plein écran"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M6 18L18 6"/>
-                </svg>
-              </button>
             </div>
           </div>
         </section>
 
-        <aside
-            class="card p-4 sm:p-8 relative transition-all duration-300 w-full"
-            :class="{ 'pl-2 pr-2': !sidebarOpen, 'sm:pl-8 sm:pr-8': sidebarOpen }"
-        >
+        <aside class="card p-6 h-fit sticky top-24 bg-white border border-gray-100 rounded-2xl shadow-sm">
+          <h2 class="text-lg font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Configuration</h2>
 
-          <div v-if="sidebarOpen" class="transition-all duration-300">
-            <h2 class="section-title mb-6">{{ titreDynamique }}</h2>
-            <div class="flex flex-col gap-5">
-              <label class="text-sm font-medium text-gray-700">
-                Joueur :
-                <select v-model="selectedPlayer" class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:ring-rose-400 focus:border-rose-400 text-sm">
-                  <option value="">Tous</option>
-                  <option v-for="player in players" :key="player" :value="player">
-                    {{ player }}
-                  </option>
-                </select>
-              </label>
-              <label class="text-sm font-medium text-gray-700">
-                Type d’action :
-                <select v-model="selectedAction" class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:ring-rose-400 focus:border-rose-400 text-sm">
-                  <option value="">Toutes</option>
-                  <option v-for="action in actions" :key="action" :value="action">
-                    {{ action }}
-                  </option>
-                </select>
-              </label>
-              <label class="text-sm font-medium text-gray-700">
-                Durée :
-                <select v-model="selectedDuration" class="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:ring-rose-400 focus:border-rose-400 text-sm">
-                  <option value="">Toutes</option>
-                  <option v-for="d in durations" :key="d.value" :value="d.value">
-                    {{ d.label }}
-                  </option>
-                </select>
-              </label>
-              <button class="btn-gradient mt-2" @click="applyFilters">Appliquer</button>
+          <div class="space-y-5">
+
+            <div>
+              <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Contexte de jeu</label>
+              <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-lg">
+                <button
+                    @click="selectedContext = 'attack'"
+                    class="py-2 text-xs font-bold rounded-md transition-all"
+                    :class="selectedContext === 'attack' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                  Notre Attaque
+                </button>
+                <button
+                    @click="selectedContext = 'defense'"
+                    class="py-2 text-xs font-bold rounded-md transition-all"
+                    :class="selectedContext === 'defense' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                  Notre Défense
+                </button>
+              </div>
+              <p class="text-[10px] text-gray-400 mt-1 px-1">
+                {{ selectedContext === 'attack' ? "Affiche où nos joueuses tirent." : "Affiche d'où l'adversaire tire." }}
+              </p>
+            </div>
+
+            <div>
+              <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Joueuse (Sambre)</label>
+              <select v-model="selectedPlayer" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
+                <option value="">Toute l'équipe</option>
+                <option v-for="p in playersList" :key="p" :value="p">{{ p }}</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Résultat</label>
+              <select v-model="selectedResult" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
+                <option value="">Tous les tirs</option>
+                <option value="But">Buts uniquement</option>
+                <option value="Echec">Tirs ratés / Arrêts</option>
+                <option value="Pertes">Pertes de balle</option>
+              </select>
+            </div>
+
+            <div class="mt-4 p-4 bg-slate-50 rounded-xl border border-slate-100">
+              <div class="flex justify-between items-end">
+                <div>
+                  <span class="block text-3xl font-black text-slate-800">{{ totalActions }}</span>
+                  <span class="text-xs font-bold text-slate-400 uppercase">Actions filtrées</span>
+                </div>
+                <div class="text-right">
+                  <span class="block text-xl font-bold text-emerald-500">{{ totalGoals }}</span>
+                  <span class="text-[10px] font-bold text-emerald-300 uppercase">Buts</span>
+                </div>
+              </div>
+
+              <div v-if="unmappedCount > 0" class="mt-3 pt-2 border-t border-slate-200 text-[10px] text-orange-500 font-mono">
+                ⚠️ {{ unmappedCount }} actions ignorées (secteur inconnu)
+              </div>
             </div>
           </div>
         </aside>
+
       </div>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 
+// --- 1. CONFIGURATION ---
+// Mapping avancé basé sur tes fichiers CSV
+const ZONE_MAPPING: Record<string, {x: number, y: number, label: string}> = {
+  // --- AILES ---
+  "ALG": { x: 10, y: 80, label: "Aile Gauche" },
+  "ALD": { x: 90, y: 80, label: "Aile Droite" },
+
+  // --- ARRIERES (9m) ---
+  "9m G": { x: 30, y: 55, label: "Arr. Gauche (9m)" },
+  "9m D": { x: 70, y: 55, label: "Arr. Droit (9m)" },
+  "Central": { x: 50, y: 50, label: "Demi-Centre" },
+
+  // --- PIVOT (6m) / ZONES PROCHES ---
+  "6m G": { x: 35, y: 75, label: "Pivot Gauche" },
+  "6m D": { x: 65, y: 75, label: "Pivot Droit" },
+  "6m":   { x: 50, y: 75, label: "Pivot Axe" },
+  "Zone": { x: 50, y: 78, label: "Zone (6m)" }, // Terme vu dans CSV
+
+  // --- SECTEURS CHIFFRÉS (FFHB) ---
+  "1 2": { x: 15, y: 70, label: "Secteur 1-2 (Ext G)" },
+  "2 3": { x: 30, y: 60, label: "Secteur 2-3 (Int G)" },
+  "3 4": { x: 50, y: 55, label: "Secteur 3-4 (Central)" },
+  "4 5": { x: 70, y: 60, label: "Secteur 4-5 (Int D)" },
+  "5 6": { x: 85, y: 70, label: "Secteur 5-6 (Ext D)" },
+
+  // --- SPÉCIAUX ---
+  "7m": { x: 50, y: 68, label: "Jet de 7m" },
+  "CA": { x: 50, y: 20, label: "Contre-Attaque" },
+  "ER": { x: 50, y: 30, label: "Engagement Rapide" },
+};
+
+// --- 2. ÉTAT ---
+const events = ref<any[]>([])
+const isLoading = ref(false)
+const intensity = ref(60)
+const isDebugMode = ref(false)
+
+// Filtres
 const selectedPlayer = ref('')
-const selectedAction = ref('')
-const selectedDuration = ref('')
-const sidebarOpen = ref(true)
-const heatmapContainer = ref<HTMLElement | null>(null)
-const isFullscreen = ref(false)
+const selectedResult = ref('') // But, Echec, etc.
+const selectedContext = ref('attack') // 'attack' | 'defense'
 
-const players = ['Dupont', 'Martin', 'Nguyen', 'Lopez', 'Garcia']
-const actions = ['Tirs', 'Passes', 'Interceptions', 'Fautes']
-const durations = [
-  { label: '3 derniers matches', value: 'last3matches' },
-  { label: '3 derniers mois', value: 'last3months' },
-  { label: 'Toute la saison', value: 'season' },
-  { label: 'Tous les matchs', value: 'all' }
-]
+// --- 3. LOGIQUE DE NORMALISATION ---
+// Cette fonction nettoie les strings compliqués du CSV (ex: "7m 9m Ext G suspension")
+function normalizeZone(rawZone: string): string | null {
+  if (!rawZone) return null;
+  const z = rawZone.trim();
 
-const titreDynamique = computed(() => {
-  if (!selectedPlayer.value && !selectedAction.value && !selectedDuration.value) {
-    return 'Filtres'
-  }
-  let titre = 'Filtres appliqués :\n'
-  if (selectedPlayer.value) titre += `Joueur = ${selectedPlayer.value}\n`
-  if (selectedAction.value) titre += `Action = ${selectedAction.value}\n`
-  if (selectedDuration.value) {
-    const label = durations.find(d => d.value === selectedDuration.value)?.label
-    titre += `Durée = ${label}\n`
-  }
-  return titre
+  // Règles spécifiques basées sur l'analyse des CSV
+  if (z.includes("7m")) return "7m"; // Priorité aux penaltys
+  if (z.includes("ALG")) return "ALG";
+  if (z.includes("ALD")) return "ALD";
+
+  // Gestion des "Ext G" / "Ext D" qui sont souvent des tirs d'arrières excentrés ou d'ailes
+  if (z.includes("Ext G")) return "9m G";
+  if (z.includes("Ext D")) return "9m D";
+
+  if (z.includes("Central")) return "Central";
+
+  // Secteurs standards
+  if (z.includes("1 2")) return "1 2";
+  if (z.includes("2 3")) return "2 3";
+  if (z.includes("3 4")) return "3 4";
+  if (z.includes("4 5")) return "4 5";
+  if (z.includes("5 6")) return "5 6";
+
+  if (z.includes("9m G")) return "9m G";
+  if (z.includes("9m D")) return "9m D";
+
+  if (z.includes("Zone")) return "Zone"; // Tirs pivot souvent marqués "Zone"
+  if (z.includes("CA")) return "CA";
+  if (z.includes("ER")) return "ER";
+
+  return null;
+}
+
+// --- 4. API ---
+async function fetchData() {
+  isLoading.value = true
+  try {
+    const res = await fetch('http://localhost:8080/evenement')
+    const json = await res.json()
+    events.value = json.docs || []
+  } catch (e) { console.error("Erreur fetch", e) }
+  finally { isLoading.value = false }
+}
+
+// --- 5. FILTRAGE ET CALCULS ---
+const playersList = computed(() => {
+  const names = new Set(events.value.map(e => e.joueuse?.trim()).filter(Boolean));
+  return Array.from(names).sort();
 })
 
-const applyFilters = () => {
-  // Logique d’application des filtres
-  console.log('Filtres appliqués :', {
-    joueur: selectedPlayer.value,
-    action: selectedAction.value,
-    durée: selectedDuration.value
-  })
-}
+const filteredEvents = computed(() => {
+  return events.value.filter(e => {
+    const nomAction = (e.nom || "").trim();
+    const res = (e.resultat || "").trim();
 
-const goFullscreen = () => {
-  const el = heatmapContainer.value
-  if (el && el.requestFullscreen) {
-    el.requestFullscreen()
-  }
-}
+    // 1. Filtre Contexte (Attaque vs Défense)
+    const isDefensiveAction = nomAction.startsWith("Déf") || nomAction.includes("0-6") && !nomAction.startsWith("Att");
+    const isOffensiveAction = nomAction.startsWith("Att") || nomAction.includes("Attaque") || e.joueuse; // Souvent si joueuse renseignée c'est offensif
 
-const exitFullscreen = () => {
-  if (document.fullscreenElement) {
-    document.exitFullscreen()
-  }
-}
-
-const onFullscreenChange = () => {
-  isFullscreen.value = !!document.fullscreenElement
-}
-
-
-if (typeof window !== 'undefined') {
-  /**
-   * Convertit une valeur de 0 à 100 en une couleur RGB allant de Bleu à Rouge,
-   * en garantissant que le canal vert reste à zéro.
-   * @param {number} value - L'intensité (0 à 100).
-   * @returns {string} - La chaîne de couleur RGB.
-   */
-  (window as any).getColorGradient = (value: number) => {
-    const ratio = Math.max(0, Math.min(100, value)) / 100;
-
-    const r = Math.round(255 * ratio);
-    const b = Math.round(255 * (1 - ratio));
-    const g = 0;
-
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-
-  (window as any).updateHeatmapColors = (valueString: string) => {
-    const value = parseInt(valueString, 10);
-    const baseColor = (window as any).getColorGradient(value);
-
-    // Extraction des composants R, G, B de la couleur de base pour les utiliser dans rgba
-    const rComponent = parseInt(baseColor.substring(baseColor.indexOf('(') + 1, baseColor.indexOf(',')));
-    const gComponent = parseInt(baseColor.substring(baseColor.indexOf(',') + 1, baseColor.lastIndexOf(',')));
-    const bComponent = parseInt(baseColor.substring(baseColor.lastIndexOf(',') + 1, baseColor.length - 1));
-
-
-    const boules = document.querySelectorAll('.boule > div.heatmap-effect');
-
-    boules.forEach(b => {
-      // CHANGEMENT ICI : Réduction du flou de 10px à 6px
-      b.style.filter = `blur(6px)`;
-
-      // Dégradé radial avec une brillance centrale (plus opaque au centre)
-      b.style.background = `
-            radial-gradient(circle at center,
-                rgba(${rComponent}, ${gComponent}, ${bComponent}, 0.8) 0%, /* Couleur de base avec plus d'opacité au centre */
-                ${baseColor} 20%, /* Couleur de base */
-                transparent 70% /* Devient transparent plus loin */
-            )`;
-      b.style.opacity = '0.9'; // Opacité générale du halo
-      b.style.boxShadow = `inset 0 0 10px rgba(255+
-      32.04, 255, 255, 0.4), inset 0 0 20px ${baseColor}, 0 0 25px ${baseColor}, 0 0 5px rgba(255, 255, 255, 0.6)`;
-    });
-  }
-
-  // Initialisation au montage
-  onMounted(() => {
-    document.addEventListener('fullscreenchange', onFullscreenChange);
-    const initialRange = document.getElementById('colorRange') as HTMLInputElement;
-    if (initialRange) {
-      (window as any).updateHeatmapColors(initialRange.value);
+    // Logique stricte :
+    // Si on veut l'attaque, on exclut les actions explicitement défensives
+    if (selectedContext.value === 'attack') {
+      // On garde ce qui commence par Att OU qui n'est pas une défense explicite
+      if (nomAction.startsWith("Déf")) return false;
+      // Si c'est Sambre qui tire, il y a généralement un nom de joueuse
+      if (!e.joueuse && !nomAction.startsWith("Att")) return false;
     }
-  });
+    else if (selectedContext.value === 'defense') {
+      // On veut voir les buts qu'on encaisse -> Actions "Déf" ou "0-6"
+      if (nomAction.startsWith("Att")) return false;
+    }
+
+    // 2. Filtre Joueuse (Seulement en mode attaque généralement)
+    if (selectedPlayer.value && e.joueuse?.trim() !== selectedPlayer.value) return false;
+
+    // 3. Filtre Résultat
+    const isGoal = res === 'But';
+    const isTurnover = ['PDB', 'Marcher', 'Passage en force'].includes(res) || e.lieupb;
+
+    if (selectedResult.value === 'But' && !isGoal) return false;
+    if (selectedResult.value === 'Echec' && (isGoal || isTurnover)) return false;
+    if (selectedResult.value === 'Pertes' && !isTurnover) return false;
+
+    return true;
+  })
+})
+
+const totalActions = computed(() => filteredEvents.value.length)
+const totalGoals = computed(() => filteredEvents.value.filter(e => e.resultat === 'But').length)
+const unmappedCount = ref(0)
+
+// --- 6. GÉNÉRATION DES POINTS HEATMAP ---
+const heatmapPoints = computed(() => {
+  const map: Record<string, { count: number, goals: number, x: number, y: number, label: string }> = {}
+  let maxVal = 0
+  let unmapped = 0
+
+  filteredEvents.value.forEach(e => {
+    // On regarde 'lieupb' si c'est une perte de balle, sinon 'secteur'
+    let rawZone = e.secteur || "";
+    if (selectedResult.value === 'Pertes' && e.lieupb) rawZone = e.lieupb;
+
+    const normalizedKey = normalizeZone(rawZone);
+
+    if (normalizedKey && ZONE_MAPPING[normalizedKey]) {
+      const key = normalizedKey;
+      if (!map[key]) {
+        map[key] = { ...ZONE_MAPPING[key], count: 0, goals: 0 };
+      }
+
+      map[key].count++;
+      if (e.resultat === 'But') map[key].goals++;
+
+      if (map[key].count > maxVal) maxVal = map[key].count;
+    } else {
+      if (rawZone) unmapped++; // On compte seulement si y'avait une zone mais qu'on l'a pas trouvée
+    }
+  })
+
+  unmappedCount.value = unmapped;
+
+  // Retourne tableau avec max global attaché
+  return Object.values(map).map(p => ({...p, max: maxVal || 1}));
+})
+
+// Points pour le mode Debug
+const debugPoints = computed(() => {
+  return Object.entries(ZONE_MAPPING).map(([k, v]) => ({
+    ...v,
+    count: 0,
+    goals: 0,
+    max: 1
+  }))
+})
+
+// --- 7. STYLE DYNAMIQUE ---
+function getStyle(count: number) {
+  if (isDebugMode.value && count === 0) {
+    return { backgroundColor: 'rgba(0,0,0,0.1)', width: '20px', height: '20px' }
+  }
+
+  const max = heatmapPoints.value.length > 0 ? heatmapPoints.value[0].max : 1;
+
+  // Formule logarithmique pour éviter que les grosses zones écrasent tout
+  const ratio = Math.log(count + 1) / Math.log(max + 1);
+  const size = 25 + (ratio * (intensity.value * 0.8)); // Taille variable selon intensité
+
+  // Couleur basée sur le ratio (Bleu -> Vert -> Jaune -> Rouge)
+  // Hue: 240 (Bleu) -> 0 (Rouge)
+  const hue = (1 - ratio) * 200; // De 200 (bleu ciel) à 0 (rouge)
+
+  // Si on est en mode Défense, on inverse les couleurs ou on met tout en rouge ?
+  // Gardons le spectre thermique standard pour l'instant.
+
+  return {
+    backgroundColor: `hsla(${hue}, 90%, 50%, 0.7)`,
+    boxShadow: `0 0 ${size/1.5}px hsla(${hue}, 90%, 50%, 0.5)`,
+    width: `${size}px`,
+    height: `${size}px`,
+  }
 }
 
-// --------------------------------------------------
-
-
-onBeforeUnmount(() => {
-  document.removeEventListener('fullscreenchange', onFullscreenChange)
-})
+onMounted(() => fetchData())
 </script>
 
 <style scoped>
-.card{
+.card {
   background: #fff;
-  border: 1px solid #F1F1F4;
   border-radius: 18px;
-  box-shadow: 0 16px 36px -14px rgba(16,24,40,0.10);
-}
-.btn-gradient{
-  border-radius: 9999px;
-  padding: 8px 14px;
-  color: #fff;
-  font-weight: 600;
-  background: linear-gradient(90deg, #F472B6 0%, #A78BFA 100%);
-  box-shadow: 0 8px 22px rgba(244,114,182,0.25);
-}
-.section-title{
-  color:#6B21A8;
-  font-weight:600;
-  font-size: 15px;
-  position:relative;
-  padding-bottom:.35rem;
-}
-.section-title::after{
-  content:"";
-  position:absolute; left:0; bottom:0;
-  width:210px; height:3px; border-radius:6px;
-  background: linear-gradient(90deg,#60A5FA 0%,#A78BFA 50%,#F472B6 100%);
-  opacity:.75;
-}
-/* Nouveau style pour les boules afin de mieux contrôler le flou et les effets */
-.heatmap-effect {
-  /* Le flou est maintenant appliqué par filter: blur() dans le JS pour un meilleur contrôle */
-  /* Les ombres et dégradés seront gérés par le JS également */
-  transition: background 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease; /* Transitions douces */
 }
 </style>

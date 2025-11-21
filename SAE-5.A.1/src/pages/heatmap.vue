@@ -15,7 +15,7 @@
           <div class="flex-1 flex items-center justify-center">
             <div class="relative w-full max-w-[1100px] bg-white border border-gray-200 rounded-xl overflow-hidden shadow-inner group/map" ref="heatmapContainer">
 
-              <img src="/Terrain de basketball minimaliste.png" alt="Terrain" class="w-full h-auto object-contain opacity-90 select-none pointer-events-none relative z-0" />
+              <img src="/Terrain de basketball minimaliste.png" alt="Terrain de Handball" class="w-full h-auto object-contain opacity-90 select-none pointer-events-none relative z-0" />
 
               <div v-for="(zone, key) in (isDebugMode ? debugPoints : heatmapPoints)" :key="key"
                    class="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center group transition-all duration-500"
@@ -133,34 +133,35 @@
 import { ref, computed, onMounted } from 'vue'
 
 // --- 1. CONFIGURATION ---
-// Mapping avancé basé sur tes fichiers CSV
+// Mapping des zones pour un terrain de HANDBALL (avec la zone en D en bas)
+// Les coordonnées sont en pourcentage (x: 0=gauche, 100=droite; y: 0=haut, 100=bas)
 const ZONE_MAPPING: Record<string, {x: number, y: number, label: string}> = {
-  // --- AILES ---
-  "ALG": { x: 10, y: 80, label: "Aile Gauche" },
-  "ALD": { x: 90, y: 80, label: "Aile Droite" },
+  // --- AILES (Proche du but / 6m) ---
+  "ALG": { x: 20, y: 63, label: "Aile Gauche" },
+  "ALD": { x: 80, y: 63, label: "Aile Droite" },
 
   // --- ARRIERES (9m) ---
-  "9m G": { x: 30, y: 55, label: "Arr. Gauche (9m)" },
-  "9m D": { x: 70, y: 55, label: "Arr. Droit (9m)" },
-  "Central": { x: 50, y: 50, label: "Demi-Centre" },
+  "9m G": { x: 29, y: 25, label: "Arr. Gauche (9m)" },
+  "9m D": { x: 71, y: 25, label: "Arr. Droit (9m)" },
+  "Central": { x: 50, y: 20, label: "Demi-Centre" }, // Légèrement plus en retrait
 
   // --- PIVOT (6m) / ZONES PROCHES ---
-  "6m G": { x: 35, y: 75, label: "Pivot Gauche" },
-  "6m D": { x: 65, y: 75, label: "Pivot Droit" },
-  "6m":   { x: 50, y: 75, label: "Pivot Axe" },
-  "Zone": { x: 50, y: 78, label: "Zone (6m)" }, // Terme vu dans CSV
+  "6m G": { x: 26, y: 52, label: "Pivot Gauche" },
+  "6m D": { x: 74, y: 52, label: "Pivot Droit" },
+  "6m":   { x: 50, y: 41, label: "Pivot Axe (6m)" }, // Sur la ligne des 6m
+  "Zone": { x: 66, y: 45, label: "Zone (6m - Proche but)" }, // Très proche du but
 
   // --- SECTEURS CHIFFRÉS (FFHB) ---
-  "1 2": { x: 15, y: 70, label: "Secteur 1-2 (Ext G)" },
-  "2 3": { x: 30, y: 60, label: "Secteur 2-3 (Int G)" },
-  "3 4": { x: 50, y: 55, label: "Secteur 3-4 (Central)" },
-  "4 5": { x: 70, y: 60, label: "Secteur 4-5 (Int D)" },
-  "5 6": { x: 85, y: 70, label: "Secteur 5-6 (Ext D)" },
+  "1 2": { x: 34, y: 45, label: "Secteur 1-2 (Ext G)" }, // Juste avant l'aile
+  "2 3": { x: 35, y: 34, label: "Secteur 2-3 (Int G)" }, // Entre 9m et 6m
+  "3 4": { x: 50, y: 31, label: "Secteur 3-4 (Central)" }, // Entre 9m et 6m
+  "4 5": { x: 65, y: 34, label: "Secteur 4-5 (Int D)" }, // Entre 9m et 6m
+  "5 6": { x: 66, y: 45, label: "Secteur 5-6 (Ext D)" }, // Juste avant l'aile
 
-  // --- SPÉCIAUX ---
-  "7m": { x: 50, y: 68, label: "Jet de 7m" },
-  "CA": { x: 50, y: 20, label: "Contre-Attaque" },
-  "ER": { x: 50, y: 30, label: "Engagement Rapide" },
+  // --- SPÉCIAUX (MAINTENANT ACTIVÉ) ---
+  "7m": { x: 50, y: 91, label: "Jet de 7m" }, // Ligne des 7m
+  "CA": { x: 30, y: 91, label: "Contre-Attaque" }, // Mappé sur la zone centrale avant le 9m
+  "ER": { x: 70, y: 91, label: "Engagement Rapide" }, // Devant le 9m
 };
 
 // --- 2. ÉTAT ---
@@ -174,18 +175,43 @@ const selectedPlayer = ref('')
 const selectedResult = ref('') // But, Echec, etc.
 const selectedContext = ref('attack') // 'attack' | 'defense'
 
-// --- 3. LOGIQUE DE NORMALISATION ---
-// Cette fonction nettoie les strings compliqués du CSV (ex: "7m 9m Ext G suspension")
+// --- 3. LOGIQUE DE NORMALISATION (MISE À JOUR) ---
 function normalizeZone(rawZone: string): string | null {
   if (!rawZone) return null;
   const z = rawZone.trim();
 
-  // Règles spécifiques basées sur l'analyse des CSV
-  if (z.includes("7m")) return "7m"; // Priorité aux penaltys
+  // ----------------------------------------------------
+  // NOUVELLES RÈGLES DE NORMALISATION POUR LES CAS IGNORÉS
+  // ----------------------------------------------------
+
+  // 1. Gérer les 7m (Jet 7m)
+  if (z.includes("Jet 7m") || z.includes("7m")) return "7m";
+
+  // 2. Gérer les Contre-Attaques (CA) et Engagement Rapide (ER)
+  // On priorise la reconnaissance de "CA" et "ER" pour les actions de transition
+  if (z.includes("CA")) return "CA";
+  if (z.includes("ER")) return "ER";
+
+  // 3. Gérer le But Vide
+  if (z.includes("But vide")) {
+    // Les tirs But Vide n'ont pas de position précise, on les mappe sur une zone de tir de loin.
+    return "Central";
+  }
+
+  // 4. Gérer les zones vagues ou complexes (suspension/appui) et "9m +"
+  if (z.includes("Central 7m 9m appui") || z.includes("7m 9m central suspension") || z.includes("9m +")) {
+    return "Central";
+  }
+  if (z.includes("7m 9m Ext G")) return "9m G";
+  if (z.includes("7m 9m Ext D")) return "9m D";
+
+  // ----------------------------------------------------
+  // ANCIENNES RÈGLES (conservées pour le nettoyage de base)
+  // ----------------------------------------------------
+
   if (z.includes("ALG")) return "ALG";
   if (z.includes("ALD")) return "ALD";
 
-  // Gestion des "Ext G" / "Ext D" qui sont souvent des tirs d'arrières excentrés ou d'ailes
   if (z.includes("Ext G")) return "9m G";
   if (z.includes("Ext D")) return "9m D";
 
@@ -201,21 +227,44 @@ function normalizeZone(rawZone: string): string | null {
   if (z.includes("9m G")) return "9m G";
   if (z.includes("9m D")) return "9m D";
 
-  if (z.includes("Zone")) return "Zone"; // Tirs pivot souvent marqués "Zone"
-  if (z.includes("CA")) return "CA";
-  if (z.includes("ER")) return "ER";
+  if (z.includes("Zone")) return "Zone";
 
   return null;
 }
 
 // --- 4. API ---
+// Fonction utilitaire pour implémenter l'attente avec backoff exponentiel
+async function fetchWithRetry(url: string, options: RequestInit = {}, maxRetries = 5, delay = 1000): Promise<Response> {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.ok) {
+        return response;
+      }
+      // Si la réponse n'est pas OK mais n'est pas une erreur réseau, on sort
+      if (response.status < 500) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+    } catch (error) {
+      // Pour les erreurs réseau ou 5xx, on retente
+      if (i === maxRetries - 1) throw error;
+      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+    }
+  }
+  // Ne devrait pas être atteint si maxRetries > 0
+  throw new Error("Maximum retries reached");
+}
+
 async function fetchData() {
   isLoading.value = true
   try {
-    const res = await fetch('http://localhost:8080/evenement')
+    // Utilisation de fetchWithRetry pour une robustesse accrue
+    const res = await fetchWithRetry('http://localhost:8080/evenement')
     const json = await res.json()
     events.value = json.docs || []
-  } catch (e) { console.error("Erreur fetch", e) }
+  } catch (e) {
+    console.error("Erreur lors de la récupération des événements:", e);
+  }
   finally { isLoading.value = false }
 }
 
@@ -231,23 +280,21 @@ const filteredEvents = computed(() => {
     const res = (e.resultat || "").trim();
 
     // 1. Filtre Contexte (Attaque vs Défense)
-    const isDefensiveAction = nomAction.startsWith("Déf") || nomAction.includes("0-6") && !nomAction.startsWith("Att");
-    const isOffensiveAction = nomAction.startsWith("Att") || nomAction.includes("Attaque") || e.joueuse; // Souvent si joueuse renseignée c'est offensif
+    // Logique ajustée : Si une joueuse est renseignée, c'est presque toujours une action d'attaque de Sambre
+    const isSambreAttack = e.joueuse || nomAction.startsWith("Att");
+    const isOpponentShot = nomAction.startsWith("Déf") || nomAction.includes("0-6");
 
-    // Logique stricte :
-    // Si on veut l'attaque, on exclut les actions explicitement défensives
     if (selectedContext.value === 'attack') {
-      // On garde ce qui commence par Att OU qui n'est pas une défense explicite
-      if (nomAction.startsWith("Déf")) return false;
-      // Si c'est Sambre qui tire, il y a généralement un nom de joueuse
-      if (!e.joueuse && !nomAction.startsWith("Att")) return false;
+      if (!isSambreAttack || isOpponentShot) return false;
     }
     else if (selectedContext.value === 'defense') {
-      // On veut voir les buts qu'on encaisse -> Actions "Déf" ou "0-6"
-      if (nomAction.startsWith("Att")) return false;
+      // On cherche les actions de l'adversaire (buts encaissés)
+      if (isSambreAttack) return false;
+      // On filtre pour ne garder que les actions pertinentes (tirs de l'adversaire ou buts)
+      if (!isOpponentShot && res !== 'But') return false;
     }
 
-    // 2. Filtre Joueuse (Seulement en mode attaque généralement)
+    // 2. Filtre Joueuse (Seulement en mode attaque)
     if (selectedPlayer.value && e.joueuse?.trim() !== selectedPlayer.value) return false;
 
     // 3. Filtre Résultat
@@ -271,6 +318,8 @@ const heatmapPoints = computed(() => {
   const map: Record<string, { count: number, goals: number, x: number, y: number, label: string }> = {}
   let maxVal = 0
   let unmapped = 0
+  // Nouveau : Stocker les actions ignorées pour le debug
+  const ignoredActions: any[] = []
 
   filteredEvents.value.forEach(e => {
     // On regarde 'lieupb' si c'est une perte de balle, sinon 'secteur'
@@ -290,21 +339,40 @@ const heatmapPoints = computed(() => {
 
       if (map[key].count > maxVal) maxVal = map[key].count;
     } else {
-      if (rawZone) unmapped++; // On compte seulement si y'avait une zone mais qu'on l'a pas trouvée
+      if (rawZone) {
+        unmapped++; // On compte seulement si y'avait une zone mais qu'on l'a pas trouvée
+        // Ajout de l'événement à la liste des actions ignorées
+        ignoredActions.push({
+          action: e.nom,
+          joueuse: e.joueuse,
+          resultat: e.resultat,
+          zone_non_mappee: rawZone
+        });
+      }
     }
   })
 
   unmappedCount.value = unmapped;
 
+  // NOUVEAU : Afficher les actions ignorées dans la console si le mode debug est actif
+  if (isDebugMode.value && ignoredActions.length > 0) {
+    console.warn(`[DEBUG MODE] ${ignoredActions.length} Actions ignorées (secteur inconnu):`, ignoredActions);
+  } else if (isDebugMode.value && ignoredActions.length === 0) {
+    console.log("[DEBUG MODE] Aucune action ignorée.");
+  }
+
+
   // Retourne tableau avec max global attaché
-  return Object.values(map).map(p => ({...p, max: maxVal || 1}));
+  // On s'assure que le tableau n'est pas vide pour prendre le max.
+  const pointsArray = Object.values(map);
+  return pointsArray.map(p => ({...p, max: maxVal || 1}));
 })
 
 // Points pour le mode Debug
 const debugPoints = computed(() => {
   return Object.entries(ZONE_MAPPING).map(([k, v]) => ({
     ...v,
-    count: 0,
+    count: 1, // On met 1 pour qu'ils soient visibles en debug
     goals: 0,
     max: 1
   }))
@@ -312,22 +380,29 @@ const debugPoints = computed(() => {
 
 // --- 7. STYLE DYNAMIQUE ---
 function getStyle(count: number) {
-  if (isDebugMode.value && count === 0) {
-    return { backgroundColor: 'rgba(0,0,0,0.1)', width: '20px', height: '20px' }
+  const points = heatmapPoints.value;
+  // Utilisez un array vide si points.length est 0, ou le max du premier élément s'il existe
+  const max = points.length > 0 ? points[0].max : 1;
+
+  if (isDebugMode.value) {
+    if (count === 0 && !max) { // Si c'est un point debug non mappé
+      return { backgroundColor: 'rgba(0,0,0,0.1)', width: '20px', height: '20px' }
+    }
+    // Si on est en mode debug et que le point est mappé (count > 0) ou si on montre tous les points (count=1 pour debugPoints)
   }
 
-  const max = heatmapPoints.value.length > 0 ? heatmapPoints.value[0].max : 1;
-
   // Formule logarithmique pour éviter que les grosses zones écrasent tout
-  const ratio = Math.log(count + 1) / Math.log(max + 1);
-  const size = 25 + (ratio * (intensity.value * 0.8)); // Taille variable selon intensité
+  // S'assurer que 'count' et 'max' sont au moins 1 pour éviter log(0)
+  const safeCount = Math.max(1, count);
+  const safeMax = Math.max(1, max);
+
+  const ratio = Math.log(safeCount + 1) / Math.log(safeMax + 1);
+  const baseSize = isDebugMode.value ? 20 : 25; // Taille de base différente en debug
+  const size = baseSize + (ratio * (intensity.value * 0.8)); // Taille variable selon intensité
 
   // Couleur basée sur le ratio (Bleu -> Vert -> Jaune -> Rouge)
   // Hue: 240 (Bleu) -> 0 (Rouge)
-  const hue = (1 - ratio) * 200; // De 200 (bleu ciel) à 0 (rouge)
-
-  // Si on est en mode Défense, on inverse les couleurs ou on met tout en rouge ?
-  // Gardons le spectre thermique standard pour l'instant.
+  const hue = (1 - ratio) * 200; // De 200 (bleu ciel pour peu d'actions) à 0 (rouge pour beaucoup d'actions)
 
   return {
     backgroundColor: `hsla(${hue}, 90%, 50%, 0.7)`,

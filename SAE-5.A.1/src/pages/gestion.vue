@@ -3,6 +3,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 
 definePageMeta({ roles: ['coach'] })
 
+const team_id = ref<string | null>(null)
+
 const menuItems = ['Membres', 'Coach', 'Joueuses']
 const selectedMenu = ref('Membres')
 const search = ref('')
@@ -358,13 +360,15 @@ const newMember = ref({
 })
 
 async function addMember() {
+  console.log('TEAM ID : ' + team_id.value)
   if (!newMember.value.role) return
   if (newMember.value.role === 'Coach') {
     const params = {
       email: newMember.value.email || '',
       password: newMember.value.password || '',
       firstName: newMember.value.firstName || '',
-      lastName: newMember.value.lastName || ''
+      lastName: newMember.value.lastName || '',
+      team_id: team_id.value || ''
     }
     const response = await fetch('http://localhost:8080/auth/register_coach', {
       method: 'POST',
@@ -380,19 +384,25 @@ async function addMember() {
       firstName: newMember.value.firstName,
       lastName: newMember.value.lastName,
       email: newMember.value.email,
-      isActive: 'Oui',
-      team_id: ''
+      isActive: 'true',
+      team_id: team_id.value + ''
     })
   } else if (newMember.value.role === 'Joueuse') {
+    const jerseyNumberValue = newMember.value.jerseyNumber?.toString().trim()
+    if (!jerseyNumberValue) {
+      alert('Merci de renseigner un numéro de maillot valide.')
+      return
+    }
     const params: any = {
       email: newMember.value.email || '',
       password: newMember.value.password || '',
       firstName: newMember.value.firstName || '',
       lastName: newMember.value.lastName || '',
       team_name: newMember.value.teamName || '',
-      jersey_number: (newMember.value.jerseyNumber || '').toString(),
+      jersey_number: jerseyNumberValue,
       birth_date: newMember.value.birthDate || '',
-      height_cm: (newMember.value.heightCm || '').toString()
+      height_cm: (newMember.value.heightCm || '').toString(),
+      team_id: team_id.value || ''
     }
     const response = await fetch('http://localhost:8080/auth/register_player', {
       method: 'POST',
@@ -412,7 +422,8 @@ async function addMember() {
       jerseyNumber: newMember.value.jerseyNumber,
       birthDate: newMember.value.birthDate,
       heightCm: newMember.value.heightCm,
-      isActive: 'Oui'
+      isActive: 'true',
+      team_id: team_id.value + ''
     })
   }
   // reset
@@ -433,7 +444,10 @@ async function addMember() {
 }
 
 // initialisation
-onMounted(fetchMembers)
+onMounted(() => {
+  fetchMembers()
+  team_id.value = typeof window !== 'undefined' ? localStorage.getItem('team_id') : null
+})
 watch(selectedMenu, fetchMembers)
 </script>
 <template>

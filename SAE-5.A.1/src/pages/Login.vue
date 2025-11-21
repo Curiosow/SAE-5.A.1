@@ -72,6 +72,7 @@ async function getAllInformations() {
       localStorage.setItem('last_name', userData.last_name)
       localStorage.setItem('first_name', userData.first_name)
       localStorage.setItem('email', userData.email)
+      localStorage.setItem('team_id', userData.team_id)
 
       const redirect = (route.query.redirect as string) || '/'
       await router.push(redirect)

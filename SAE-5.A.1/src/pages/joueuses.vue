@@ -9,8 +9,8 @@
             @click="toggleCompare"
             class="flex items-center gap-2 px-5 py-2 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full shadow-sm hover:bg-violet-50 transition-colors"
         >
-          <svg v-if="!isComparing" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
-          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          <svg v-if="!isComparing" class="w-4 h-4"  stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+          <svg v-else class="w-4 h-4"  stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           {{ isComparing ? 'Arrêter la comparaison' : 'Comparer deux joueuses' }}
         </button>
       </div>
@@ -46,7 +46,7 @@
                       @click.stop="toggleDropdown(viewIndex)"
                   >
                     {{ view.player?.last_name ?? 'Sélectionner' }} {{ view.player?.first_name ?? '' }}
-                    <svg class="w-5 h-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                    <svg class="w-5 h-5 text-gray-400" viewBox="0 0 20 20" ><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                   </h1>
 
                   <div v-if="dropdowns[viewIndex]" class="absolute z-20 mt-2 bg-white border border-gray-200 rounded-xl shadow-xl w-72 max-h-80 overflow-y-auto">
@@ -256,7 +256,7 @@
 
             <div v-else class="flex flex-col items-center justify-center py-20 text-center card">
               <div class="bg-gray-100 p-4 rounded-full mb-4">
-                <svg class="w-8 h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg class="w-8 h-8 text-gray-400"  viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
@@ -325,15 +325,26 @@ function getAge(d?: string): string { if (!d) return '-'; const t = new Date(); 
 function formatHeight(c?: number): string { return c ? `${c} cm` : '-' }
 function pct(v?: number | null): string { if (v == null || Number.isNaN(Number(v))) return '0%'; return `${Math.max(0, Math.min(100, Math.round(Number(v))))}%` }
 
-const commonOptions: ChartOptions<'bar' | 'doughnut'> = {
-  responsive: true, maintainAspectRatio: false,
-  plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 15 } } }
+const commonOptions: ChartOptions<any> = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom',
+      labels: { usePointStyle: true, padding: 15 }
+    }
+  }
 }
 const radarOptions: ChartOptions<'radar'> = {
   responsive: true, maintainAspectRatio: false,
   scales: { r: { angleLines: { display: true }, suggestedMin: 0, suggestedMax: 100, ticks: { display: false } } },
   plugins: { legend: { display: false } }
 }
+
+
+
+
+
 
 
 function getChartsData(player: Player | null): ChartsPayload | null {
@@ -419,8 +430,8 @@ function getChartsData(player: Player | null): ChartsPayload | null {
 
 
 
-  let radarLabels: string[] = [];
-  let radarValues: number[] = [];
+  let radarLabels: string[] ;
+  let radarValues: number[] ;
 
   if (isGB) {
     radarLabels = ['Global %', 'Arrêts 9m', 'Arrêts 6m/Ailes', 'Penalty (7m)', 'Relance'];
@@ -554,6 +565,5 @@ onUnmounted(() => document.removeEventListener('click', closeAllDropdowns))
 .shadow-avatar { box-shadow: 0 18px 40px -26px rgba(168,85,247,0.35); }
 .mini-kpi { background: #fff; border: 1px solid #f3f3f6; border-radius: 12px; padding: 10px 12px; box-shadow: 0 8px 26px -20px rgba(16,24,40,0.06); }
 .tabs .tab { padding: 10px 18px; border-radius: 9999px; font-weight: 600; color: #6b7280; background: transparent; border: none; }
-.tabs .tab.active { background: linear-gradient(90deg,#f472b6,#a78bfa); color: white; box-shadow: 0 6px 20px -12px rgba(167,139,250,0.4); }
 
 </style>

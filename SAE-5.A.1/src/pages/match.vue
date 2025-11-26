@@ -64,7 +64,14 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import Papa from 'papaparse';
+
+// Page uniquement côté client pour éviter tout SSR sur cette page
+definePageMeta({
+  ssr: false,
+});
+
+// Récupération de papaparse via le plugin client-only
+const { $papaparse } = useNuxtApp();
 
 // --- Data Loading (simulé ici, garde tes fetch existants) ---
 const teamlogo = await getLogo();
@@ -101,7 +108,7 @@ function handleFile(e: Event) {
   isUploading.value = true;
   uploadStatus.value = null;
 
-  Papa.parse(file, {
+  $papaparse.parse(file, {
     header: true,
     skipEmptyLines: true,
     encoding: "UTF-8",

@@ -2,7 +2,7 @@
   <main class="min-h-screen bg-[#f7f7fb] pt-16">
     <div
         class="mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-12 transition-all duration-300"
-        :class="isComparing ? 'max-w-[95%] xl:max-w-[1800px]' : 'max-w-[1180px]'"
+        :class="isComparing ? 'max-w-[98%] xl:max-w-[1800px]' : 'max-w-[1180px]'"
     >
       <div class="flex justify-end mb-6">
         <button
@@ -15,7 +15,8 @@
         </button>
       </div>
 
-      <div :class="isComparing ? 'grid grid-cols-1 xl:grid-cols-2 gap-8' : ''">
+      <div :class="isComparing ? 'grid grid-cols-1 lg:grid-cols-2 gap-6 items-start' : ''">
+
         <div v-for="(view, viewIndex) in displayedViews" :key="viewIndex" class="min-w-0 flex flex-col">
 
           <header class="relative card-large p-6 sm:p-8 mb-6">
@@ -65,52 +66,38 @@
 
                 <div class="mt-2 w-full">
                   <div v-if="view.player?.stats?.is_gb" class="hidden md:flex flex-wrap gap-4">
-                    <div class="mini-kpi flex-1 min-w-[140px]">
-                      <div class="text-sm text-gray-500">Arrêts</div>
+                    <div class="mini-kpi flex-1 min-w-[120px]">
+                      <div class="text-xs text-gray-500 uppercase">Arrêts</div>
                       <div class="text-2xl font-semibold text-gray-900">{{ view.player?.stats?.arrets_total ?? 0 }}</div>
-                      <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                      <div class="w-full mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                         <div class="h-full rounded-full bg-gradient-to-r from-teal-400 to-blue-500" :style="{ width: pct(view.player?.stats?.pct_arret_global) }"></div>
                       </div>
                     </div>
-                    <div class="mini-kpi flex-1 min-w-[140px]">
-                      <div class="text-sm text-gray-500">% Arrêt</div>
+                    <div class="mini-kpi flex-1 min-w-[120px]">
+                      <div class="text-xs text-gray-500 uppercase">% Arrêt</div>
                       <div class="text-2xl font-semibold text-gray-900">{{ pct(view.player?.stats?.pct_arret_global) }}</div>
                     </div>
-                    <div class="mini-kpi flex-1 min-w-[140px]">
-                      <div class="text-sm text-gray-500">Buts Encaissés</div>
+                    <div class="mini-kpi flex-1 min-w-[120px]">
+                      <div class="text-xs text-gray-500 uppercase">Buts Enc.</div>
                       <div class="text-2xl font-semibold text-rose-600">{{ view.player?.stats?.buts_encaisse ?? 0 }}</div>
-                    </div>
-                    <div class="mini-kpi flex-1 min-w-[140px]">
-                      <div class="text-sm text-gray-500">Relances</div>
-                      <div class="text-2xl font-semibold text-gray-900">{{ view.player?.stats?.total_passes_decisives ?? 0 }}</div>
                     </div>
                   </div>
 
                   <div v-else class="hidden md:flex flex-wrap gap-4">
-                    <div class="mini-kpi flex-1 min-w-[140px]">
-                      <div class="text-sm text-gray-500">Buts</div>
+                    <div class="mini-kpi flex-1 min-w-[120px]">
+                      <div class="text-xs text-gray-500 uppercase">Buts</div>
                       <div class="text-2xl font-semibold text-gray-900">{{ view.player?.stats?.total_buts ?? 0 }}</div>
-                      <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
+                      <div class="w-full mt-1 h-1.5 rounded-full bg-gray-100 overflow-hidden">
                         <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" :style="{ width: pct(view.player?.stats?.efficacite_tir_pct) }"></div>
                       </div>
                     </div>
-                    <div class="mini-kpi flex-1 min-w-[140px]">
-                      <div class="text-sm text-gray-500">Assistances</div>
+                    <div class="mini-kpi flex-1 min-w-[120px]">
+                      <div class="text-xs text-gray-500 uppercase">Passes</div>
                       <div class="text-2xl font-semibold text-gray-900">{{ view.player?.stats?.total_passes_decisives ?? 0 }}</div>
-                      <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
-                        <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" :style="{ width: pct(view.player?.stats?.ratio_passeur) }"></div>
-                      </div>
                     </div>
-                    <div class="mini-kpi flex-1 min-w-[140px]">
-                      <div class="text-sm text-gray-500">% Tir</div>
+                    <div class="mini-kpi flex-1 min-w-[120px]">
+                      <div class="text-xs text-gray-500 uppercase">% Tir</div>
                       <div class="text-2xl font-semibold text-gray-900">{{ pct(view.player?.stats?.efficacite_tir_pct) }}</div>
-                    </div>
-                    <div class="mini-kpi flex-1 min-w-[140px]">
-                      <div class="text-sm text-gray-500">Pertes balles</div>
-                      <div class="text-2xl font-semibold text-gray-900">{{ view.player?.stats?.total_balles_perdues ?? 0 }}</div>
-                      <div class="w-full mt-2 h-2 rounded-full bg-gray-100 overflow-hidden">
-                        <div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" :style="{ width: pct(view.player?.stats?.total_balles_perdues) }"></div>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -118,7 +105,7 @@
             </div>
           </header>
 
-          <nav class="tabs flex gap-2 bg-white/60 border border-gray-100 rounded-full px-1 py-1 mb-6 self-start">
+          <nav class="tabs flex gap-2 bg-white/60 border border-gray-100 rounded-full px-1 py-1 mb-6 mx-auto self-center">
             <button
                 v-for="t in tabs"
                 :key="t"
@@ -130,7 +117,7 @@
           </nav>
 
           <section v-if="activeTab === 'Stats'" class="flex-grow">
-            <div class="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-6">
+            <div class="grid grid-cols-1 gap-6" :class="(!isComparing) ? 'lg:grid-cols-[1fr_auto]' : '2xl:grid-cols-[1fr_auto]'">
 
               <div class="space-y-6 min-w-0">
                 <template v-if="view.player?.stats?.is_gb">
@@ -185,7 +172,7 @@
                 </div>
               </div>
 
-              <aside class="card p-6 lg:w-[280px] h-fit sticky top-24">
+              <aside class="card p-6 lg:w-[280px] h-fit" :class="(!isComparing) ? 'sticky top-24' : ''">
                 <h4 class="text-sm font-semibold text-gray-900 uppercase tracking-wider opacity-60 mb-4">
                   Profil Athlétique
                 </h4>
@@ -217,20 +204,16 @@
                     </span>
                   </div>
                 </div>
-
-
               </aside>
 
             </div>
           </section>
 
           <section v-else-if="activeTab === 'Graphiques'" class="flex-grow">
-
             <div
                 v-if="view.player && view.player.stats && (view.player.stats.total_buts + view.player.stats.tirs_rates + view.player.stats.arrets_total + view.player.stats.buts_encaisse > 0)"
                 class="grid grid-cols-1 md:grid-cols-2 gap-6"
             >
-
               <div class="card p-6 flex flex-col items-center">
                 <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">
                   {{ view.player.stats?.is_gb ? 'Répartition Arrêts' : 'Efficacité au Tir' }}
@@ -269,7 +252,6 @@
                   />
                 </div>
               </div>
-
             </div>
 
             <div v-else class="flex flex-col items-center justify-center py-20 text-center card">
@@ -283,10 +265,6 @@
                 Il n'y a pas encore d'événements enregistrés pour {{ view.player?.first_name }}.
               </p>
             </div>
-          </section>
-
-          <section v-else-if="activeTab === 'Heat Map'" class="card p-12 text-center text-gray-500">
-            Heat Map à venir...
           </section>
 
         </div>
@@ -326,7 +304,7 @@ interface ChartsPayload {
 }
 
 const players = ref<Player[]>([])
-const tabs = ['Stats', 'Graphiques', 'Heat Map']
+const tabs = ['Stats', 'Graphiques']
 const activeTab = ref<string>('Stats')
 const isComparing = ref(false)
 const selectedIndices = ref<number[]>([-1, -1])
@@ -334,8 +312,12 @@ const dropdowns = ref<boolean[]>([false, false])
 
 const displayedViews = computed(() => {
   const views = []
-  views.push({ index: 0, playerIndex: selectedIndices.value[0], player: selectedIndices.value[0] >= 0 ? players.value[selectedIndices.value[0]] : null })
-  if (isComparing.value) { views.push({ index: 1, playerIndex: selectedIndices.value[1], player: selectedIndices.value[1] >= 0 ? players.value[selectedIndices.value[1]] : null }) }
+  const idx0 = selectedIndices.value?.[0] ?? -1
+  views.push({ index: 0, playerIndex: idx0, player: idx0 >= 0 ? players.value[idx0] : null })
+  if (isComparing.value) {
+    const idx1 = selectedIndices.value?.[1] ?? -1
+    views.push({ index: 1, playerIndex: idx1, player: idx1 >= 0 ? players.value[idx1] : null })
+  }
   return views
 })
 
@@ -544,7 +526,7 @@ function computePlayerStats(events: any[], position: string = ''): Stats {
 async function fetchPlayers() {
   try {
     const [eR, pR, plR] = await Promise.all([fetch('http://localhost:8080/evenement'), fetch('http://localhost:8080/positions'), fetch('http://localhost:8080/auth/players')]);
-    if(!plR.ok) throw new Error('Failed');
+    if (!plR.ok) throw new Error('Failed');
     const evD = await eR.json(); const poD = await pR.json(); const plD = await plR.json();
     const allEv = evD.docs || []; const pos = poD.docs || [];
     players.value = plD.map((p: any) => {
@@ -552,7 +534,8 @@ async function fetchPlayers() {
       const posObj = pos.find((px: any) => px.player_id === p.id);
       return { ...p, events: pEv, stats: computePlayerStats(pEv, posObj?.abrevation || ''), position: posObj?.abrevation || '' } as Player
     });
-    if (players.value.length > 0) selectedIndices.value[0] = 0;
+    // sélectionner par défaut le dernier joueur (dernier index), ou -1 si aucun
+    selectedIndices.value[0] = players.value.length > 0 ? players.value.length - 1 : -1;
   } catch (e) { console.error(e); players.value = []; selectedIndices.value = [-1, -1] }
 }
 

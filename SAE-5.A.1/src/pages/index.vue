@@ -73,48 +73,6 @@
         </aside>
       </div>
 
-      <h3 class="mt-10 section-title">Performance d’équipe</h3>
-      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="kpi-card"><div class="kpi-head"><span>Buts marqués</span></div><div class="kpi-value">{{ kpis.goals }}</div><div class="kpi-trend up">+{{ kpis.trendGoals }}%</div></div>
-        <div class="kpi-card"><div class="kpi-head"><span>Précision</span></div><div class="kpi-value text-rose-600">{{ kpis.shotAccuracy }}%</div><div class="kpi-trend down">-{{ kpis.trendShot }}%</div></div>
-        <div class="kpi-card"><div class="kpi-head"><span>Buts concédés</span></div><div class="kpi-value">{{ kpis.goalsAgainst }}</div><div class="kpi-trend down">-{{ kpis.trendAgainst }}%</div></div>
-        <div class="kpi-card"><div class="kpi-head"><span>Contres</span></div><div class="kpi-value">{{ kpis.counters }}</div><div class="kpi-trend up">+{{ kpis.trendCounters }}%</div></div>
-      </div>
-
-      <div class="mt-6 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-
-        <div class="flex flex-col gap-6">
-          <section class="card p-6 sm:p-8">
-            <div class="flex items-center justify-between mb-6"><h4 class="text-sm font-semibold text-gray-900">Formation</h4></div>
-            <div class="relative h-[240px]">
-              <div v-for="(p, idx) in bubblePos" :key="idx" class="absolute h-8 w-8 rounded-full bg-gradient-to-br from-rose-400 to-violet-500 shadow-lg grid place-items-center text-white text-xs font-bold" :style="p">{{ dots[idx] }}</div>
-            </div>
-          </section>
-
-          <section class="card p-6 sm:p-8">
-            <h4 class="text-sm font-semibold text-gray-900 mb-4">Stats globales</h4>
-            <div class="space-y-4">
-              <div v-for="row in progressRows" :key="row.label" class="space-y-1">
-                <div class="flex justify-between text-sm"><span class="text-gray-700">{{ row.label }}</span><span class="font-medium">{{ row.value }}%</span></div>
-                <div class="h-2 w-full rounded-full bg-gray-100"><div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" :style="{ width: row.value + '%' }"></div></div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <aside class="card p-6 h-fit">
-          <h4 class="text-sm font-semibold text-gray-900">Meilleures joueuses</h4>
-          <ul class="mt-4 space-y-3">
-            <li v-for="(p, i) in topPlayers" :key="p.id" class="flex items-center justify-between">
-              <div class="flex items-center gap-3 min-w-0">
-                <img :src="p.avatar" alt="" class="h-9 w-9 rounded-full object-cover"/>
-                <div class="min-w-0"><p class="truncate text-sm font-medium text-gray-900">Joueuse {{ i + 1 }}</p><p class="text-xs text-gray-500">{{ p.stat }}</p></div>
-              </div>
-              <span class="text-rose-600 text-sm font-semibold">{{ p.accuracy }}%</span>
-            </li>
-          </ul>
-        </aside>
-      </div>
 
       <section class="mt-8 card p-4 sm:p-6">
         <h4 class="text-sm font-semibold text-gray-900 mb-4">Classement</h4>

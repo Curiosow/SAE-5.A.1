@@ -2,42 +2,58 @@
   <main class="min-h-screen bg-[#F8FAFC] font-sans text-slate-800">
     <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pt-12 pb-24">
 
-      <!-- HEADER -->
-      <header class="mb-10 text-center">
+      <!-- HEADER & MODE TOGGLE -->
+      <header class="mb-10 flex flex-col items-center text-center">
         <div class="inline-block px-3 py-1 mb-3 text-xs font-bold tracking-widest text-indigo-600 uppercase bg-indigo-50 rounded-full">Analyses & Statistiques</div>
-        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2">Comparateur de Matchs</h1>
-        <p class="text-slate-500">Analysez les scores, les tactiques et les zones de pertes de balle.</p>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">Analyse de Match</h1>
+
+        <!-- Toggle Mode -->
+        <div class="bg-slate-100 p-1 rounded-full inline-flex relative">
+          <div class="absolute inset-y-1 transition-all duration-300 ease-out bg-white rounded-full shadow-sm w-1/2"
+               :class="isComparisonMode ? 'left-1/2' : 'left-0'"></div>
+          <button @click="isComparisonMode = false"
+                  class="relative z-10 px-6 py-2 text-sm font-bold rounded-full transition-colors duration-200"
+                  :class="!isComparisonMode ? 'text-indigo-600' : 'text-slate-500 hover:text-slate-700'">
+            Vue Match Unique
+          </button>
+          <button @click="enableComparison"
+                  class="relative z-10 px-6 py-2 text-sm font-bold rounded-full transition-colors duration-200"
+                  :class="isComparisonMode ? 'text-rose-500' : 'text-slate-500 hover:text-slate-700'">
+            Comparateur
+          </button>
+        </div>
       </header>
 
       <!-- SÉLECTEURS -->
-      <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 mb-12 max-w-5xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center relative bg-slate-50 rounded-[20px] p-6">
+      <section class="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 mb-12 max-w-5xl mx-auto transition-all duration-500">
+        <div class="grid gap-6 items-center relative bg-slate-50 rounded-[20px] p-6"
+             :class="isComparisonMode ? 'grid-cols-1 md:grid-cols-2' : 'grid-cols-1'">
 
-          <!-- Match A -->
+          <!-- Match A (Toujours visible) -->
           <div>
             <label class="flex items-center gap-2 text-xs font-bold text-indigo-600 uppercase tracking-wider mb-2">
               <span class="flex h-5 w-5 items-center justify-center rounded bg-indigo-600 text-[10px] text-white">A</span>
-              Match Référence
+              {{ isComparisonMode ? 'Match Référence' : 'Sélectionner le Match' }}
             </label>
-            <select v-model="selectedMatchA" class="block w-full py-3 pl-4 pr-10 text-sm border-slate-200 rounded-xl focus:ring-indigo-500 bg-white shadow-sm cursor-pointer">
-              <option :value="null">Sélectionner un match...</option>
+            <select v-model="selectedMatchA" class="block w-full py-3 pl-4 pr-10 text-sm border-slate-200 rounded-xl focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm cursor-pointer">
+              <option :value="null">Choisir un match...</option>
               <option v-for="m in matches" :key="m.id" :value="m.id">
                 {{ formatDate(m.dateMatch) }} — vs {{ m.adversaire || 'Inconnu' }}
               </option>
             </select>
           </div>
 
-          <!-- VS Badge -->
-          <div class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 bg-white rounded-full items-center justify-center shadow border border-slate-100 text-xs font-black text-slate-300 z-10">VS</div>
+          <!-- VS Badge (Seulement en mode comparaison) -->
+          <div v-if="isComparisonMode" class="hidden md:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-10 w-10 bg-white rounded-full items-center justify-center shadow border border-slate-100 text-xs font-black text-slate-300 z-10">VS</div>
 
-          <!-- Match B -->
-          <div>
+          <!-- Match B (Seulement en mode comparaison) -->
+          <div v-if="isComparisonMode">
             <label class="flex items-center gap-2 text-xs font-bold text-rose-500 uppercase tracking-wider mb-2">
               <span class="flex h-5 w-5 items-center justify-center rounded bg-rose-500 text-[10px] text-white">B</span>
               Match Comparé
             </label>
-            <select v-model="selectedMatchB" class="block w-full py-3 pl-4 pr-10 text-sm border-slate-200 rounded-xl focus:ring-rose-500 bg-white shadow-sm cursor-pointer">
-              <option :value="null">Sélectionner un match...</option>
+            <select v-model="selectedMatchB" class="block w-full py-3 pl-4 pr-10 text-sm border-slate-200 rounded-xl focus:ring-rose-500 focus:border-rose-500 bg-white shadow-sm cursor-pointer">
+              <option :value="null">Choisir un match...</option>
               <option v-for="m in matches" :key="m.id" :value="m.id">
                 {{ formatDate(m.dateMatch) }} — vs {{ m.adversaire || 'Inconnu' }}
               </option>
@@ -52,10 +68,12 @@
         <p class="mt-4 text-slate-500 font-medium">Chargement des données...</p>
       </div>
 
-      <!-- CONTENU PRINCIPAL -->
-      <div v-else-if="statsA && statsB" class="space-y-12 animate-fade-in">
+      <!-- ========================================================================= -->
+      <!-- VUE 1: MODE COMPARATEUR (Le code complet précédent) -->
+      <!-- ========================================================================= -->
+      <div v-else-if="isComparisonMode && statsA && statsB" class="space-y-12 animate-fade-in">
 
-        <!-- 1. SCOREBOARD & KPI (AVEC BADGE RÉSULTAT) -->
+        <!-- 1. SCOREBOARD & KPI -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <ScoreboardCard :stats="statsA" color="#4F46E5" letter="A" />
           <ScoreboardCard :stats="statsB" color="#F43F5E" letter="B" />
@@ -63,12 +81,10 @@
 
         <!-- 2. LIEUX PERTES DE BALLE (CAMEMBERTS) -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <!-- Camembert A -->
           <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
             <h3 class="text-sm font-bold text-indigo-600 uppercase mb-6">Lieux Pertes de Balle (A)</h3>
             <div class="flex flex-col sm:flex-row items-center gap-8">
-              <div class="relative w-40 h-40 rounded-full shadow-inner flex-shrink-0"
-                   :style="{ background: getConicGradient(formatPieData(statsA.sambre.turnoverZones, 'indigo')) }">
+              <div class="relative w-40 h-40 rounded-full shadow-inner flex-shrink-0" :style="{ background: getConicGradient(formatPieData(statsA.sambre.turnoverZones, 'indigo')) }">
                 <div class="absolute inset-0 m-auto w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm">
                   <span class="text-xl font-black text-indigo-800">{{ statsA.sambre.turnovers }}</span>
                 </div>
@@ -86,12 +102,10 @@
             </div>
           </div>
 
-          <!-- Camembert B -->
           <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col">
             <h3 class="text-sm font-bold text-rose-500 uppercase mb-6">Lieux Pertes de Balle (B)</h3>
             <div class="flex flex-col sm:flex-row items-center gap-8">
-              <div class="relative w-40 h-40 rounded-full shadow-inner flex-shrink-0"
-                   :style="{ background: getConicGradient(formatPieData(statsB.sambre.turnoverZones, 'rose')) }">
+              <div class="relative w-40 h-40 rounded-full shadow-inner flex-shrink-0" :style="{ background: getConicGradient(formatPieData(statsB.sambre.turnoverZones, 'rose')) }">
                 <div class="absolute inset-0 m-auto w-24 h-24 bg-white rounded-full flex items-center justify-center shadow-sm">
                   <span class="text-xl font-black text-rose-800">{{ statsB.sambre.turnovers }}</span>
                 </div>
@@ -110,116 +124,64 @@
           </div>
         </section>
 
-        <!-- 3. TACTIQUE OFFENSIVE & SPÉCIFIQUES (7m, 6c5) -->
+        <!-- 3. TACTIQUE & SPÉCIFIQUES -->
         <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- Tactiques (Enclenchements 06) -->
           <div class="card p-6 lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm">
             <div class="flex items-center gap-2 mb-6 border-b border-slate-100 pb-4">
               <span class="text-2xl">♟️</span>
-              <h2 class="text-lg font-bold text-slate-900">Tactique Offensive (Enclenchements)</h2>
+              <h2 class="text-lg font-bold text-slate-900">Tactique Offensive</h2>
             </div>
             <div class="space-y-5">
               <div v-for="(tactic, idx) in getCommonTactics(statsA, statsB)" :key="idx" class="relative group">
-                <div class="flex justify-between text-sm font-bold text-slate-700 mb-2">
-                  <span>{{ tactic.name }}</span>
-                </div>
+                <div class="flex justify-between text-sm font-bold text-slate-700 mb-2"><span>{{ tactic.name }}</span></div>
                 <div class="flex flex-col gap-1">
                   <div class="flex items-center gap-2">
-                    <div class="w-full bg-slate-100 rounded-r-full h-2 relative overflow-hidden">
-                      <div class="absolute left-0 top-0 h-full" style="background-color: #4F46E5" :style="{width: getPercentMax(tactic.countA, 15) + '%'}"></div>
-                    </div>
+                    <div class="w-full bg-slate-100 rounded-r-full h-2 relative overflow-hidden"><div class="absolute left-0 top-0 h-full" style="background-color: #4F46E5" :style="{width: getPercentMax(tactic.countA, 15) + '%'}"></div></div>
                     <span class="text-xs font-bold text-indigo-700 w-8 text-right">{{ tactic.countA }}</span>
                   </div>
                   <div class="flex items-center gap-2">
-                    <div class="w-full bg-slate-100 rounded-r-full h-2 relative overflow-hidden">
-                      <div class="absolute left-0 top-0 h-full" style="background-color: #F43F5E" :style="{width: getPercentMax(tactic.countB, 15) + '%'}"></div>
-                    </div>
+                    <div class="w-full bg-slate-100 rounded-r-full h-2 relative overflow-hidden"><div class="absolute left-0 top-0 h-full" style="background-color: #F43F5E" :style="{width: getPercentMax(tactic.countB, 15) + '%'}"></div></div>
                     <span class="text-xs font-bold text-rose-700 w-8 text-right">{{ tactic.countB }}</span>
                   </div>
                 </div>
               </div>
-              <div v-if="getCommonTactics(statsA, statsB).length === 0" class="text-center text-slate-400 italic">Aucune donnée tactique commune trouvée.</div>
+              <div v-if="getCommonTactics(statsA, statsB).length === 0" class="text-center text-slate-400 italic">Aucune donnée.</div>
             </div>
           </div>
 
-          <!-- Spécifiques (7m, 6c5) - SANS TRANSITION ICI -->
           <div class="space-y-6">
-            <!-- Carte 7m -->
             <div class="card p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
-              <h3 class="text-xs font-bold text-slate-500 uppercase mb-4">Jets de 7m (Réussis / Total)</h3>
+              <h3 class="text-xs font-bold text-slate-500 uppercase mb-4">Jets de 7m</h3>
               <div class="flex justify-around text-center">
-                <div>
-                  <div class="text-2xl font-black text-indigo-600">{{ statsA.sambre.penaltiesScored }}/{{ statsA.sambre.penaltiesTotal }}</div>
-                  <div class="text-[10px] font-bold text-slate-400 uppercase mt-1">Match A</div>
-                </div>
+                <div><div class="text-2xl font-black text-indigo-600">{{ statsA.sambre.penaltiesScored }}/{{ statsA.sambre.penaltiesTotal }}</div><div class="text-[10px] font-bold text-slate-400 uppercase mt-1">Match A</div></div>
                 <div class="w-px bg-slate-100"></div>
-                <div>
-                  <div class="text-2xl font-black text-rose-500">{{ statsB.sambre.penaltiesScored }}/{{ statsB.sambre.penaltiesTotal }}</div>
-                  <div class="text-[10px] font-bold text-slate-400 uppercase mt-1">Match B</div>
-                </div>
+                <div><div class="text-2xl font-black text-rose-500">{{ statsB.sambre.penaltiesScored }}/{{ statsB.sambre.penaltiesTotal }}</div><div class="text-[10px] font-bold text-slate-400 uppercase mt-1">Match B</div></div>
               </div>
             </div>
-
-            <!-- Carte 6c5 -->
             <div class="card p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
-              <h3 class="text-xs font-bold text-slate-500 uppercase mb-4">Jeu en Supériorité (6c5)</h3>
+              <h3 class="text-xs font-bold text-slate-500 uppercase mb-4">Jeu en 6c5</h3>
               <div class="space-y-3">
-                <div class="flex justify-between items-center p-2 bg-indigo-50 rounded-lg border border-indigo-100">
-                  <span class="text-xs font-bold text-indigo-700">Match A</span>
-                  <span class="font-black text-indigo-900">{{ statsA.sambre.powerPlayCount }} <span class="text-[10px] font-normal">actions</span></span>
-                </div>
-                <div class="flex justify-between items-center p-2 bg-rose-50 rounded-lg border border-rose-100">
-                  <span class="text-xs font-bold text-rose-700">Match B</span>
-                  <span class="font-black text-rose-900">{{ statsB.sambre.powerPlayCount }} <span class="text-[10px] font-normal">actions</span></span>
-                </div>
+                <div class="flex justify-between items-center p-2 bg-indigo-50 rounded-lg border border-indigo-100"><span class="text-xs font-bold text-indigo-700">Match A</span><span class="font-black text-indigo-900">{{ statsA.sambre.powerPlayCount }}</span></div>
+                <div class="flex justify-between items-center p-2 bg-rose-50 rounded-lg border border-rose-100"><span class="text-xs font-bold text-rose-700">Match B</span><span class="font-black text-rose-900">{{ statsB.sambre.powerPlayCount }}</span></div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 4. GRANDE SECTION TRANSITION & MONTÉE DE BALLE (REMISE EN PLACE) -->
+        <!-- 4. TRANSITION -->
         <section class="card p-8 bg-gradient-to-br from-slate-50 to-indigo-50/50 rounded-3xl border border-indigo-100">
           <div class="flex items-center gap-2 mb-8">
-            <span class="text-2xl"></span>
-            <h2 class="text-lg font-bold text-indigo-900">Transition & Montée de Balle</h2>
+            <span class="text-2xl">🚀</span><h2 class="text-lg font-bold text-indigo-900">Transition & Montée de Balle</h2>
           </div>
-
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center">
-            <!-- Grand Espace -->
-            <div>
-              <div class="text-xs font-bold text-indigo-400 uppercase mb-2">Buts Grand Espace</div>
-              <div class="flex justify-center items-end gap-4">
-                <div class="text-3xl font-black text-indigo-600">{{ statsA.sambre.fastBreakGoals }}</div>
-                <span class="text-slate-300 text-2xl font-light">/</span>
-                <div class="text-3xl font-black text-rose-500">{{ statsB.sambre.fastBreakGoals }}</div>
-              </div>
-            </div>
-
-            <!-- Enclenchements Transition -->
-            <div>
-              <div class="text-xs font-bold text-indigo-400 uppercase mb-2">Enclenchement Transition</div>
-              <div class="flex justify-center items-end gap-4">
-                <div class="text-3xl font-black text-indigo-600">{{ statsA.sambre.transitionCount }}</div>
-                <span class="text-slate-300 text-2xl font-light">/</span>
-                <div class="text-3xl font-black text-rose-500">{{ statsB.sambre.transitionCount }}</div>
-              </div>
-            </div>
-
-            <!-- Repli Défensif -->
-            <div>
-              <div class="text-xs font-bold text-indigo-400 uppercase mb-2">Replis Défensifs</div>
-              <div class="flex justify-center items-end gap-4">
-                <div class="text-3xl font-black text-indigo-600">{{ statsA.sambre.repliCount }}</div>
-                <span class="text-slate-300 text-2xl font-light">/</span>
-                <div class="text-3xl font-black text-rose-500">{{ statsB.sambre.repliCount }}</div>
-              </div>
-            </div>
+            <div><div class="text-xs font-bold text-indigo-400 uppercase mb-2">Buts Grand Espace</div><div class="flex justify-center items-end gap-4"><div class="text-3xl font-black text-indigo-600">{{ statsA.sambre.fastBreakGoals }}</div><span class="text-slate-300 text-2xl font-light">/</span><div class="text-3xl font-black text-rose-500">{{ statsB.sambre.fastBreakGoals }}</div></div></div>
+            <div><div class="text-xs font-bold text-indigo-400 uppercase mb-2">Encl. Transition</div><div class="flex justify-center items-end gap-4"><div class="text-3xl font-black text-indigo-600">{{ statsA.sambre.transitionCount }}</div><span class="text-slate-300 text-2xl font-light">/</span><div class="text-3xl font-black text-rose-500">{{ statsB.sambre.transitionCount }}</div></div></div>
+            <div><div class="text-xs font-bold text-indigo-400 uppercase mb-2">Replis Défensifs</div><div class="flex justify-center items-end gap-4"><div class="text-3xl font-black text-indigo-600">{{ statsA.sambre.repliCount }}</div><span class="text-slate-300 text-2xl font-light">/</span><div class="text-3xl font-black text-rose-500">{{ statsB.sambre.repliCount }}</div></div></div>
           </div>
         </section>
 
-        <!-- 5. DÉFENSE & GARDIENNES -->
+        <!-- 5. DÉFENSE & JOUEUSES -->
         <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <!-- Systèmes Défensifs -->
           <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
             <h2 class="text-lg font-bold text-slate-900 mb-4">Systèmes Défensifs</h2>
             <div class="space-y-4">
@@ -232,96 +194,119 @@
               </div>
             </div>
           </div>
-
-          <!-- Gardiennes -->
           <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
-            <h2 class="text-lg font-bold text-slate-900 mb-4">Gardiennes (Arrêts)</h2>
+            <h2 class="text-lg font-bold text-slate-900 mb-4">Effectifs</h2>
             <div class="grid grid-cols-2 gap-4">
-              <div>
-                <h5 class="text-xs font-bold text-indigo-600 uppercase mb-2 border-b border-indigo-100 pb-1">Match A</h5>
-                <div v-for="(g, name) in statsA.sambre.goalkeepers" :key="name" class="flex justify-between text-sm py-1">
-                  <span class="text-slate-600">{{ name }}</span>
-                  <span class="font-bold text-indigo-800">{{ g.saves }}</span>
+              <div class="bg-indigo-50 p-4 rounded-xl text-center"><div class="text-2xl font-black text-indigo-600">{{ Object.keys(statsA.sambre.players).length }}</div><div class="text-xs font-bold text-indigo-400">Joueuses (A)</div></div>
+              <div class="bg-rose-50 p-4 rounded-xl text-center"><div class="text-2xl font-black text-rose-500">{{ Object.keys(statsB.sambre.players).length }}</div><div class="text-xs font-bold text-rose-400">Joueuses (B)</div></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- ========================================================================= -->
+      <!-- VUE 2: MODE MATCH UNIQUE (VUE DÉTAILLÉE) -->
+      <!-- ========================================================================= -->
+      <div v-else-if="!isComparisonMode && statsA" class="space-y-10 animate-fade-in">
+
+        <!-- Scoreboard Centré -->
+        <div class="max-w-3xl mx-auto">
+          <ScoreboardCard :stats="statsA" color="#4F46E5" letter="A" />
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+          <!-- Colonne Gauche : Visuels (Camembert + Défense) -->
+          <div class="space-y-8">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col items-center">
+              <h3 class="text-sm font-bold text-indigo-600 uppercase mb-6 w-full text-center">Lieu Pertes de Balle</h3>
+              <div class="relative w-48 h-48 rounded-full shadow-inner mb-6" :style="{ background: getConicGradient(formatPieData(statsA.sambre.turnoverZones, 'indigo')) }">
+                <div class="absolute inset-0 m-auto w-28 h-28 bg-white rounded-full flex items-center justify-center shadow-sm">
+                  <div class="text-center">
+                    <span class="block text-3xl font-black text-indigo-800">{{ statsA.sambre.turnovers }}</span>
+                    <span class="text-[10px] uppercase font-bold text-slate-400">Pertes</span>
+                  </div>
                 </div>
               </div>
-              <div>
-                <h5 class="text-xs font-bold text-rose-500 uppercase mb-2 border-b border-rose-100 pb-1">Match B</h5>
-                <div v-for="(g, name) in statsB.sambre.goalkeepers" :key="name" class="flex justify-between text-sm py-1">
-                  <span class="text-slate-600">{{ name }}</span>
-                  <span class="font-bold text-rose-800">{{ g.saves }}</span>
+              <div class="w-full space-y-2">
+                <div v-for="(slice, idx) in formatPieData(statsA.sambre.turnoverZones, 'indigo').slice(0,4)" :key="idx" class="flex items-center justify-between text-xs">
+                  <div class="flex items-center gap-2"><span class="w-3 h-3 rounded-full" :style="{ backgroundColor: slice.color }"></span><span class="text-slate-600 font-medium">{{ slice.label }}</span></div>
+                  <span class="font-bold text-indigo-600">{{ slice.percent }}%</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h3 class="text-sm font-bold text-indigo-600 uppercase mb-4">Défense</h3>
+              <div class="space-y-4">
+                <div v-for="sys in ['0-6', '1-5', 'Strict', 'Défense 5 c 6']" :key="sys">
+                  <div class="flex justify-between text-xs font-bold text-slate-600 mb-1"><span>{{ sys }}</span><span class="text-indigo-600">{{ Math.round(getDefenseShare(statsA, sys)) }}%</span></div>
+                  <div class="flex h-2 rounded bg-slate-100 overflow-hidden relative">
+                    <div class="h-full" style="background-color: #4F46E5" :style="{width: getDefenseShare(statsA, sys) + '%'}"></div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </section>
 
-        <!-- 6. TABLEAUX JOUEUSES -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-          <!-- Table A -->
-          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-            <div class="bg-indigo-50 px-4 py-3 border-b border-indigo-100">
-              <span class="text-xs font-bold text-indigo-700 uppercase">Effectif Match A</span>
+          <!-- Colonne Centrale : Joueuses -->
+          <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 overflow-hidden h-fit">
+            <div class="bg-indigo-50 px-6 py-4 border-b border-indigo-100 flex justify-between items-center">
+              <h2 class="font-bold text-indigo-900">Statistiques Individuelles</h2>
+              <span class="text-xs bg-white text-indigo-600 px-2 py-1 rounded font-bold border border-indigo-200">{{ Object.keys(statsA.sambre.players).length }} Joueuses</span>
             </div>
             <div class="overflow-x-auto">
               <table class="w-full text-sm text-left">
                 <thead class="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-100">
                 <tr>
-                  <th class="px-4 py-2">Joueuse</th>
-                  <th class="px-2 py-2 text-center">Buts/Tirs</th>
-                  <th class="px-2 py-2 text-center">%</th>
-                  <th class="px-2 py-2 text-center text-rose-500">PDB</th>
+                  <th class="px-6 py-3">Joueuse</th>
+                  <th class="px-4 py-3 text-center">Buts/Tirs</th>
+                  <th class="px-4 py-3 text-center">Eff.</th>
+                  <th class="px-4 py-3 text-center text-blue-600">P.D</th>
+                  <th class="px-4 py-3 text-center text-rose-500">PDB</th>
                 </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-50">
-                <tr v-for="p in sortedPlayers(statsA.sambre.players)" :key="p.name">
-                  <td class="px-4 py-2 font-bold text-slate-700">{{ p.name }}</td>
-                  <td class="px-2 py-2 text-center">{{ p.goals }}<span class="text-slate-300">/</span>{{ p.shots }}</td>
-                  <td class="px-2 py-2 text-center font-bold" :class="getEfficiencyColor(p.goals, p.shots)">
-                    {{ p.shots > 0 ? Math.round((p.goals/p.shots)*100) : 0 }}%
-                  </td>
-                  <td class="px-2 py-2 text-center text-rose-500 font-bold">{{ p.turnovers }}</td>
+                <tr v-for="p in sortedPlayers(statsA.sambre.players)" :key="p.name" class="hover:bg-slate-50/50 transition-colors">
+                  <td class="px-6 py-3 font-bold text-slate-700">{{ p.name }}</td>
+                  <td class="px-4 py-3 text-center font-medium">{{ p.goals }} <span class="text-slate-300 mx-1">/</span> {{ p.shots }}</td>
+                  <td class="px-4 py-3 text-center font-bold" :class="getEfficiencyColor(p.goals, p.shots)">{{ p.shots > 0 ? Math.round((p.goals/p.shots)*100) : 0 }}%</td>
+                  <td class="px-4 py-3 text-center font-bold text-blue-600">{{ p.assists }}</td>
+                  <td class="px-4 py-3 text-center font-bold text-rose-500">{{ p.turnovers }}</td>
                 </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          <!-- Table B -->
-          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
-            <div class="bg-rose-50 px-4 py-3 border-b border-rose-100">
-              <span class="text-xs font-bold text-rose-700 uppercase">Effectif Match B</span>
-            </div>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm text-left">
-                <thead class="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-100">
-                <tr>
-                  <th class="px-4 py-2">Joueuse</th>
-                  <th class="px-2 py-2 text-center">Buts/Tirs</th>
-                  <th class="px-2 py-2 text-center">%</th>
-                  <th class="px-2 py-2 text-center text-rose-500">PDB</th>
-                </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                <tr v-for="p in sortedPlayers(statsB.sambre.players)" :key="p.name">
-                  <td class="px-4 py-2 font-bold text-slate-700">{{ p.name }}</td>
-                  <td class="px-2 py-2 text-center">{{ p.goals }}<span class="text-slate-300">/</span>{{ p.shots }}</td>
-                  <td class="px-2 py-2 text-center font-bold" :class="getEfficiencyColor(p.goals, p.shots)">
-                    {{ p.shots > 0 ? Math.round((p.goals/p.shots)*100) : 0 }}%
-                  </td>
-                  <td class="px-2 py-2 text-center text-rose-500 font-bold">{{ p.turnovers }}</td>
-                </tr>
-                </tbody>
-              </table>
+        </div>
+
+        <!-- Section Tactique / Transition (Mode Simple) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="text-sm font-bold text-indigo-600 uppercase mb-4">Tactiques Offensives</h3>
+            <div class="flex flex-wrap gap-2">
+              <div v-for="(count, name) in statsA.sambre.tactics" :key="name" class="px-3 py-1 bg-slate-50 rounded-full border border-slate-100 text-xs font-medium flex items-center gap-2">
+                <span class="text-slate-600">{{ name }}</span>
+                <span class="bg-indigo-600 text-white px-1.5 py-0.5 rounded-md font-bold text-[10px]">{{ count }}</span>
+              </div>
             </div>
           </div>
-        </section>
+          <div class="bg-indigo-50 p-6 rounded-2xl border border-indigo-100 shadow-sm flex justify-around items-center">
+            <div class="text-center"><div class="text-3xl font-black text-indigo-700">{{ statsA.sambre.fastBreakGoals }}</div><div class="text-[10px] uppercase font-bold text-indigo-400">Buts Gd Espace</div></div>
+            <div class="w-px h-12 bg-indigo-200"></div>
+            <div class="text-center"><div class="text-3xl font-black text-indigo-700">{{ statsA.sambre.transitionCount }}</div><div class="text-[10px] uppercase font-bold text-indigo-400">Encl. Transition</div></div>
+            <div class="w-px h-12 bg-indigo-200"></div>
+            <div class="text-center"><div class="text-3xl font-black text-indigo-700">{{ statsA.sambre.penaltiesScored }}<span class="text-lg text-indigo-400 font-normal">/{{ statsA.sambre.penaltiesTotal }}</span></div><div class="text-[10px] uppercase font-bold text-indigo-400">Jets 7m</div></div>
+          </div>
+        </div>
 
       </div>
 
       <!-- EMPTY STATE -->
       <div v-else class="text-center py-32 opacity-40">
         <div class="text-6xl grayscale mb-4">📊</div>
-        <p class="text-xl font-medium text-slate-400">Sélectionnez deux matchs pour débuter.</p>
+        <p class="text-xl font-medium text-slate-400">Sélectionnez un match pour débuter l'analyse.</p>
       </div>
 
     </div>
@@ -331,7 +316,21 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 
-// --- COMPOSANTS INLINE ---
+// --- STATE ---
+const isComparisonMode = ref(false) // Switch Mode
+const matches = ref<Match[]>([])
+const allEvents = ref<Evenement[]>([])
+const selectedMatchA = ref<number | null>(null)
+const selectedMatchB = ref<number | null>(null)
+const isLoading = ref(false)
+const SAMBRE_GKS = ['JUSTICIA', 'ALIX'];
+
+// --- ACTIONS ---
+function enableComparison() {
+  isComparisonMode.value = true
+}
+
+// --- COMPOSANT SCOREBOARD ---
 const ScoreboardCard = {
   props: ['stats', 'color', 'letter'],
   template: `
@@ -383,7 +382,7 @@ const ScoreboardCard = {
   }
 }
 
-// --- TYPES & LOGIQUE ---
+// --- LOGIC ---
 interface Match { id: number; adversaire: string; dateMatch: string; }
 interface Evenement {
   id: number; matchId: number; nom: string; joueuse: string; defense: string; resultat: string;
@@ -411,13 +410,6 @@ interface MatchAnalysis {
   matchId: number; matchLabel: string; matchDate: string; result: string;
   sambre: StatsTeam; opponent: { goals: number; };
 }
-
-const matches = ref<Match[]>([])
-const allEvents = ref<Evenement[]>([])
-const selectedMatchA = ref<number | null>(null)
-const selectedMatchB = ref<number | null>(null)
-const isLoading = ref(false)
-const SAMBRE_GKS = ['JUSTICIA', 'ALIX'];
 
 async function fetchData() {
   isLoading.value = true
@@ -469,7 +461,6 @@ function computeStats(matchId: number): MatchAnalysis | null {
       }
     }
     else {
-      // Attaque Sambre
       if (['But', 'Ar GB', 'HC', 'tir raté NC', 'Poteau', 'Tir'].includes(res)) {
         stats.shots++
         if (player && stats.players[player]) stats.players[player].shots++
@@ -481,21 +472,22 @@ function computeStats(matchId: number): MatchAnalysis | null {
         }
         if (normalize(e.jets7m).includes('Equipe à analyser')) stats.penaltiesTotal++
       }
-      // Pertes Balle & Lieu
+      if (normalize(e.passed)) {
+        stats.assists++
+        if (player && stats.players[player]) stats.players[player].assists++
+      }
       if (['PDB', 'Marcher', 'Passage en force'].includes(res)) {
         stats.turnovers++
         if (player && stats.players[player]) stats.players[player].turnovers++
         const lieu = normalize(e.lieupb) || "Non renseigné"
         stats.turnoverZones[lieu] = (stats.turnoverZones[lieu] || 0) + 1
       }
-      // Tactique
       const tac = normalize(e.enclenchements06)
       if (tac) stats.tactics[tac] = (stats.tactics[tac] || 0) + 1
 
       if (normalize(e.enclenchements6c5)) stats.powerPlayCount++
       if (normalize(e.enclenchementstransier)) stats.transitionCount++
     }
-    // Repli
     if (normalize(e.repli)) stats.repliCount++
   })
 

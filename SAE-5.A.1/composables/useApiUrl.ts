@@ -3,10 +3,10 @@
  * @returns L'URL de base de l'API (production ou développement)
  */
 export const useApiUrl = () => {
-  const isProduction = import.meta.env.MODE === 'production' || process.env.NODE_ENV === 'production'
+  // @ts-ignore
+  const isProduction = __USE_PROD_API__
   
   return isProduction 
     ? 'https://oscarapi.eternyuhc.fr:8080'
     : 'http://localhost:8080'
 }
-

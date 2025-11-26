@@ -25,4 +25,10 @@ export default defineNuxtConfig({
     pages: 'src/pages',
     components: 'src/components'
   },
+
+  vite: {
+    define: {
+      '__USE_PROD_API__': process.env.NODE_ENV === 'production'
+    }
+  }
 })

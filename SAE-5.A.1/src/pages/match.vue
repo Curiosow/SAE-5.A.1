@@ -72,6 +72,7 @@ definePageMeta({
 
 // Récupération de papaparse via le plugin client-only
 const { $papaparse } = useNuxtApp();
+const apiUrl = useApiUrl();
 
 // --- Data Loading (simulé ici, garde tes fetch existants) ---
 const teamlogo = await getLogo();
@@ -162,7 +163,7 @@ function handleFile(e: Event) {
 
         console.log("Envoi du match contre", adversaireName, "à", lieuInfo);
 
-        const res = await fetch('http://localhost:8080/api/import/match-events', {
+        const res = await fetch(`${apiUrl}/api/import/match-events`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
@@ -188,11 +189,11 @@ function handleFile(e: Event) {
 
 // --- API Helpers ---
 async function fetchRencontres(){
-  const res = await fetch('http://localhost:8080/rencontre')
+  const res = await fetch(`${apiUrl}/rencontre`)
   return await res.json()
 }
 async function getLogo(){
-  const res = await fetch('http://localhost:8080/teamlogo')
+  const res = await fetch(`${apiUrl}/teamlogo`)
   return await res.json()
 }
 </script>

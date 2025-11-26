@@ -4,6 +4,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 definePageMeta({ roles: ['coach'] })
 
 const team_id = ref<string | null>(null)
+const apiUrl = useApiUrl()
 
 const menuItems = ['Membres', 'Coach', 'Joueuses']
 const selectedMenu = ref('Membres')
@@ -46,7 +47,7 @@ function startEditFirstName(member: any) {
 }
 async function saveFirstName(member: any) {
   if (!editingFirstName.value.trim()) { editingPlayerEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
 
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -66,7 +67,7 @@ function startEditLastName(member: any) {
 }
 async function saveLastName(member: any) {
   if (!editingLastNameValue.value.trim()) { editingLastName.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'false', type: 'last_name', newValue: editingLastNameValue.value, email: member.email })
@@ -85,7 +86,7 @@ function startEditJerseyNumber(member: any) {
 }
 async function saveJerseyNumber(member: any) {
   if (editingJerseyNumberValue.value === '' || editingJerseyNumberValue.value === null) { editingJerseyNumber.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'false', type: 'jersey_number', newValue: editingJerseyNumberValue.value.toString(), email: member.email })
@@ -104,7 +105,7 @@ function startEditHeight(member: any) {
 }
 async function saveHeight(member: any) {
   if (editingHeightValue.value === '' || editingHeightValue.value === null) { editingHeightEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'false', type: 'height_cm', newValue: editingHeightValue.value.toString(), email: member.email })
@@ -123,7 +124,7 @@ function startEditBirthDate(member: any) {
 }
 async function saveBirthDate(member: any) {
   if (!editingBirthDateValue.value.trim()) { editingBirthDateEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'false', type: 'birth_date', newValue: editingBirthDateValue.value, email: member.email })
@@ -142,7 +143,7 @@ function startEditEmail(member: any) {
 }
 async function saveEmail(member: any) {
   if (!editingEmailValue.value.trim()) { editingEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'false', type: 'email', newValue: editingEmailValue.value, email: member.email })
@@ -155,7 +156,7 @@ async function saveEmail(member: any) {
 // Actif joueur
 async function toggleActive(member: any) {
   const newActive = member.isActive === 'Oui' ? false : true
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'false', type: 'is_active', newValue: newActive.toString(), email: member.email })
@@ -178,7 +179,7 @@ async function resetPlayerPassword(member: any) {
   }
   resettingPlayerEmail.value = member.email
   try {
-    const response = await fetch('http://localhost:8080/auth/update_information', {
+    const response = await fetch(`${apiUrl}/auth/update_information`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -204,7 +205,7 @@ async function deletePlayer(member: any) {
   if (!confirmation) return
   deletingPlayerEmail.value = member.email
   try {
-    const response = await fetch('http://localhost:8080/auth/delete_player', {
+    const response = await fetch(`${apiUrl}/auth/delete_player`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ email: member.email })
@@ -229,7 +230,7 @@ function startEditCoachFirstName(member: any) {
 }
 async function saveCoachFirstName(member: any) {
   if (!editingCoachFirstNameValue.value.trim()) { editingCoachFirstNameEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'true', type: 'first_name', newValue: editingCoachFirstNameValue.value, email: member.email })
@@ -248,7 +249,7 @@ function startEditCoachLastName(member: any) {
 }
 async function saveCoachLastName(member: any) {
   if (!editingCoachLastNameValue.value.trim()) { editingCoachLastNameEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'true', type: 'last_name', newValue: editingCoachLastNameValue.value, email: member.email })
@@ -267,7 +268,7 @@ function startEditCoachEmail(member: any) {
 }
 async function saveCoachEmail(member: any) {
   if (!editingCoachEmailValue.value.trim()) { editingCoachEmail.value = null; return }
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'true', type: 'email', newValue: editingCoachEmailValue.value, email: member.email })
@@ -280,7 +281,7 @@ async function saveCoachEmail(member: any) {
 
 async function toggleCoachActive(member: any) {
   const newActive = member.isActive === 'Oui' ? false : true
-  await fetch('http://localhost:8080/auth/update_information', {
+  await fetch(`${apiUrl}/auth/update_information`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ coach: 'true', type: 'is_active', newValue: newActive.toString(), email: member.email })
@@ -302,9 +303,9 @@ function setTableColumns() {
 
 // Récupération des membres depuis l'API
 async function fetchMembers() {
-  let url = 'http://localhost:8080/auth/members'
-  if (selectedMenu.value === 'Coach') url = 'http://localhost:8080/auth/coaches'
-  else if (selectedMenu.value === 'Joueuses') url = 'http://localhost:8080/auth/players'
+  let url = `${apiUrl}/auth/members`
+  if (selectedMenu.value === 'Coach') url = `${apiUrl}/auth/coaches`
+  else if (selectedMenu.value === 'Joueuses') url = `${apiUrl}/auth/players`
 
   const response = await fetch(url)
   const data = await response.json()
@@ -370,7 +371,7 @@ async function addMember() {
       lastName: newMember.value.lastName || '',
       team_id: team_id.value || ''
     }
-    const response = await fetch('http://localhost:8080/auth/register_coach', {
+    const response = await fetch(`${apiUrl}/auth/register_coach`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams(params)
@@ -404,7 +405,7 @@ async function addMember() {
       height_cm: (newMember.value.heightCm || '').toString(),
       team_id: team_id.value || ''
     }
-    const response = await fetch('http://localhost:8080/auth/register_player', {
+    const response = await fetch(`${apiUrl}/auth/register_player`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams(params)

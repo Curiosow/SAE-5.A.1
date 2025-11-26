@@ -324,6 +324,7 @@ const selectedMatchA = ref<number | null>(null)
 const selectedMatchB = ref<number | null>(null)
 const isLoading = ref(false)
 const SAMBRE_GKS = ['JUSTICIA', 'ALIX'];
+const apiUrl = useApiUrl()
 
 // --- ACTIONS ---
 function enableComparison() {
@@ -414,7 +415,7 @@ interface MatchAnalysis {
 async function fetchData() {
   isLoading.value = true
   try {
-    const [rM, rE] = await Promise.all([fetch('http://localhost:8080/match'), fetch('http://localhost:8080/evenement')])
+    const [rM, rE] = await Promise.all([fetch(`${apiUrl}/match`), fetch(`${apiUrl}/evenement`)])
     const jM = await rM.json(); const jE = await rE.json();
     matches.value = jM.docs || []; allEvents.value = jE.docs || [];
   } catch(e) { console.error(e); }

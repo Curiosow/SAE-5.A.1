@@ -145,6 +145,8 @@ interface HandballEvent {
   lieupb: string;
 }
 
+const apiUrl = useApiUrl()
+
 // --- 1. CONFIGURATION ---
 // Mapping des zones pour un terrain de HANDBALL
 const ZONE_MAPPING: Record<string, {x: number, y: number, label: string}> = {
@@ -241,7 +243,7 @@ async function fetchWithRetry(url: string, options: RequestInit = {}, maxRetries
 async function fetchData() {
   isLoading.value = true
   try {
-    const res = await fetchWithRetry('http://localhost:8080/evenement')
+    const res = await fetchWithRetry(`${apiUrl}/evenement`)
     const json = await res.json()
     events.value = json.docs || []
   } catch (e) {

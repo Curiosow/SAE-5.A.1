@@ -287,6 +287,8 @@ ChartJS.register(...registerables)
 
 definePageMeta({ roles: ['coach'] })
 
+const apiUrl = useApiUrl()
+
 interface Stats {
   def_duels_gagnes: number; total_buts: number; buts_sur_tirs_ratio_brut: string; total_actions_def_negatives: number; def_duels_perdus: number; def_recuperations: number; efficacite_aile_pct: number; total_balles_perdues: number; total_actions_def_positives: number; def_contres: number; def_sanctions_2min: number; efficacite_9m_pct: number; efficacite_6m_pct: number; ratio_passeur: number; total_passes_decisives: number; tirs_rates: number; def_fautes: number; efficacite_tir_pct: number; tirs_arretes: number; efficacite_7m_pct: number;
   is_gb: boolean; buts_encaisse: number; arrets_total: number; tirs_non_cadres_recus: number; pct_arret_global: number;
@@ -525,7 +527,7 @@ function computePlayerStats(events: any[], position: string = ''): Stats {
 
 async function fetchPlayers() {
   try {
-    const [eR, pR, plR] = await Promise.all([fetch('http://localhost:8080/evenement'), fetch('http://localhost:8080/positions'), fetch('http://localhost:8080/auth/players')]);
+    const [eR, pR, plR] = await Promise.all([fetch(`${apiUrl}/evenement`), fetch(`${apiUrl}/positions`), fetch(`${apiUrl}/auth/players`)]);
     if (!plR.ok) throw new Error('Failed');
     const evD = await eR.json(); const poD = await pR.json(); const plD = await plR.json();
     const allEv = evD.docs || []; const pos = poD.docs || [];

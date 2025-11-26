@@ -10,6 +10,7 @@ const errorMsg = ref<string | null>(null)
 
 const router = useRouter()
 const route = useRoute()
+const apiUrl = useApiUrl()
 
 // Validation email
 const emailValid = computed(() =>
@@ -30,7 +31,7 @@ async function submitLogin() {
 
   loading.value = true
   try {
-    const res = await fetch('http://localhost:8080/auth/login', {
+    const res = await fetch(`${apiUrl}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({ email: email.value, password: password.value }),
@@ -57,7 +58,7 @@ async function getAllInformations() {
     loading.value = true
 
     try {
-      const url = 'http://localhost:8080/auth/userbymail?' + new URLSearchParams({ email: email.value }).toString()
+      const url = `${apiUrl}/auth/userbymail?` + new URLSearchParams({ email: email.value }).toString()
       const res = await fetch(url, {
         method: 'GET',
       })

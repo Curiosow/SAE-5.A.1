@@ -219,6 +219,7 @@ import { ref, computed, onMounted } from 'vue'
 
 // --- CONFIG ---
 const TARGET_TEAM = "SAMBRE AVESNOIS HANDBALL"
+const apiUrl = useApiUrl()
 
 // --- TEAMS & LOGOS ---
 interface Team { id: string; name: string; logo: string; }
@@ -226,7 +227,7 @@ const teams = ref<Team[]>([])
 const teamLogoMap = ref<Map<string, string>>(new Map())
 async function fetchTeams() {
   try {
-    const res = await fetch('http://localhost:8080/teamlogo')
+    const res = await fetch(`${apiUrl}/teamlogo`)
     if(res.ok) {
       const data = await res.json()
       if(data && Array.isArray(data.docs)) {
@@ -244,7 +245,7 @@ function getTeamLogo(teamName: string) { return teamLogoMap.value.get(teamName) 
 const summary = ref({ wins: 0, draws: 0, losses: 0, points: 0, rank: 0, form: 'V‑V‑N‑V‑V' })
 async function fetchTeamSummary() {
   try {
-    const res = await fetch('http://localhost:8080/rankingAvesnois')
+    const res = await fetch(`${apiUrl}/rankingAvesnois`)
     if (res.ok) {
       const data = await res.json()
       summary.value = { ...summary.value, wins: data.victoires, draws: data.nuls, losses: data.defaites, points: data.points, rank: data.position }
@@ -258,7 +259,7 @@ const isLoadingClassement = ref(true)
 async function fetchClassement() {
   isLoadingClassement.value = true
   try {
-    const res = await fetch('http://localhost:8080/ranking')
+    const res = await fetch(`${apiUrl}/ranking`)
     const data = await res.json()
     if (data?.docs) {
       // Correction : Tri forcé par position (croissant : 1, 2, 3...)
@@ -276,7 +277,7 @@ const onlySambreFilter = ref(false)
 async function fetchRencontres() {
   isLoadingMatches.value = true
   try {
-    const res = await fetch('http://localhost:8080/rencontre')
+    const res = await fetch(`${apiUrl}/rencontre`)
     const data = await res.json()
     if (data?.docs) matches.value = data.docs
   } catch (e) { console.error(e) } finally { isLoadingMatches.value = false }

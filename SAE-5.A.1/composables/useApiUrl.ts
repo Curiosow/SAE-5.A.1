@@ -7,6 +7,6 @@ export const useApiUrl = () => {
   const isProduction = __USE_PROD_API__
   
   return isProduction 
-    ? 'https://oscarapi.eternyuhc.fr:8080'
+    ? 'https://oscarapi.eternyuhc.fr'
     : 'http://localhost:8080'
 }

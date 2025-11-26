@@ -545,7 +545,6 @@ async function fetchPlayers() {
       const posObj = pos.find((px: any) => px.player_id === p.id);
       return { ...p, events: pEv, stats: computePlayerStats(pEv, posObj?.abrevation || ''), position: posObj?.abrevation || '' } as Player
     });
-    // sélectionner par défaut le dernier joueur (dernier index), ou -1 si aucun
     selectedIndices.value[0] = players.value.length > 0 ? players.value.length - 1 : -1;
   } catch (e) { console.error(e); players.value = []; selectedIndices.value = [-1, -1] }
 }

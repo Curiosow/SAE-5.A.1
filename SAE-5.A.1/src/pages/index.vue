@@ -4,6 +4,7 @@
 
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
 
+        <!-- CARTE PRINCIPALE (Stats Sambre) -->
         <section class="card p-6 sm:p-8">
           <div class="flex items-start gap-4">
             <div class="h-14 w-14 rounded-2xl bg-white p-1 shadow-[0_6px_16px_rgba(168,85,247,0.15)] border border-gray-100 flex items-center justify-center">
@@ -24,10 +25,10 @@
 
           <div class="mt-6 flex flex-wrap items-center justify-between">
             <div class="text-[12px]"><div class="text-gray-500">Position</div><div class="font-semibold text-gray-900">#{{ summary.rank }}</div></div>
-            <div class="text-[12px] text-gray-500">Série : <span class="text-gray-900 font-medium">{{ summary.form }}</span></div>
           </div>
         </section>
 
+        <!-- ENCART PROCHAIN MATCH -->
         <aside class="card relative overflow-hidden flex flex-col justify-between min-h-[300px]">
           <div class="relative z-10 flex justify-center pt-6">
             <div class="bg-gray-50 border border-gray-100 rounded-full px-4 py-1 flex items-center gap-2 shadow-sm">
@@ -73,49 +74,7 @@
         </aside>
       </div>
 
-      <h3 class="mt-10 section-title">Performance d’équipe</h3>
-      <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="kpi-card"><div class="kpi-head"><span>Buts marqués</span></div><div class="kpi-value">{{ kpis.goals }}</div><div class="kpi-trend up">+{{ kpis.trendGoals }}%</div></div>
-        <div class="kpi-card"><div class="kpi-head"><span>Précision</span></div><div class="kpi-value text-rose-600">{{ kpis.shotAccuracy }}%</div><div class="kpi-trend down">-{{ kpis.trendShot }}%</div></div>
-        <div class="kpi-card"><div class="kpi-head"><span>Buts concédés</span></div><div class="kpi-value">{{ kpis.goalsAgainst }}</div><div class="kpi-trend down">-{{ kpis.trendAgainst }}%</div></div>
-        <div class="kpi-card"><div class="kpi-head"><span>Contres</span></div><div class="kpi-value">{{ kpis.counters }}</div><div class="kpi-trend up">+{{ kpis.trendCounters }}%</div></div>
-      </div>
-
-      <div class="mt-6 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6">
-
-        <div class="flex flex-col gap-6">
-          <section class="card p-6 sm:p-8">
-            <div class="flex items-center justify-between mb-6"><h4 class="text-sm font-semibold text-gray-900">Formation</h4></div>
-            <div class="relative h-[240px]">
-              <div v-for="(p, idx) in bubblePos" :key="idx" class="absolute h-8 w-8 rounded-full bg-gradient-to-br from-rose-400 to-violet-500 shadow-lg grid place-items-center text-white text-xs font-bold" :style="p">{{ dots[idx] }}</div>
-            </div>
-          </section>
-
-          <section class="card p-6 sm:p-8">
-            <h4 class="text-sm font-semibold text-gray-900 mb-4">Stats globales</h4>
-            <div class="space-y-4">
-              <div v-for="row in progressRows" :key="row.label" class="space-y-1">
-                <div class="flex justify-between text-sm"><span class="text-gray-700">{{ row.label }}</span><span class="font-medium">{{ row.value }}%</span></div>
-                <div class="h-2 w-full rounded-full bg-gray-100"><div class="h-full rounded-full bg-gradient-to-r from-rose-400 to-violet-500" :style="{ width: row.value + '%' }"></div></div>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <aside class="card p-6 h-fit">
-          <h4 class="text-sm font-semibold text-gray-900">Meilleures joueuses</h4>
-          <ul class="mt-4 space-y-3">
-            <li v-for="(p, i) in topPlayers" :key="p.id" class="flex items-center justify-between">
-              <div class="flex items-center gap-3 min-w-0">
-                <img :src="p.avatar" alt="" class="h-9 w-9 rounded-full object-cover"/>
-                <div class="min-w-0"><p class="truncate text-sm font-medium text-gray-900">Joueuse {{ i + 1 }}</p><p class="text-xs text-gray-500">{{ p.stat }}</p></div>
-              </div>
-              <span class="text-rose-600 text-sm font-semibold">{{ p.accuracy }}%</span>
-            </li>
-          </ul>
-        </aside>
-      </div>
-
+      <!-- TABLEAU CLASSEMENT -->
       <section class="mt-8 card p-4 sm:p-6">
         <h4 class="text-sm font-semibold text-gray-900 mb-4">Classement</h4>
         <div v-if="!classement.length" class="text-center py-4 text-gray-500">Chargement ou aucune donnée.</div>
@@ -160,6 +119,7 @@
       </section>
     </div>
 
+    <!-- MODAL CALENDRIER -->
     <Teleport to="body">
       <div v-if="showDetailsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showDetailsModal = false"></div>
@@ -193,6 +153,7 @@
       </div>
     </Teleport>
 
+    <!-- MODAL RÉSULTATS ÉQUIPE -->
     <Teleport to="body">
       <div v-if="showResultsModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showResultsModal = false"></div>
@@ -258,10 +219,6 @@ import { ref, computed, onMounted } from 'vue'
 
 // --- CONFIG ---
 const TARGET_TEAM = "SAMBRE AVESNOIS HANDBALL"
-const kpis = { goals: 485, trendGoals: 12.5, shotAccuracy: 68.4, trendShot: 3.2, goalsAgainst: 325, trendAgainst: 2.1, counters: 89, trendCounters: 8.7 }
-const topPlayers = [ { id: 1, avatar: 'https://placehold.co/64x64', stat: '45 buts', accuracy: 78.5 }, { id: 2, avatar: 'https://placehold.co/64x64', stat: '8 assistances', accuracy: 0 }, { id: 3, avatar: 'https://placehold.co/64x64', stat: '38 buts', accuracy: 82.3 } ]
-const dots = [7, 9, 11, 2, 6, 4, 1]; const bubblePos = [ { left: '18%', top: '18%' }, { left: '46%', top: '12%' }, { left: '74%', top: '18%' }, { left: '22%', top: '58%' }, { left: '50%', top: '48%' }, { left: '78%', top: '58%' }, { left: '50%', top: '78%' } ]
-const progressRows = [ { label: 'Possession', value: 64 }, { label: 'Taux de convertion', value: 72 }, { label: 'Tirs à 7m', value: 85 }, { label: 'Défense', value: 58 } ]
 
 // --- TEAMS & LOGOS ---
 interface Team { id: string; name: string; logo: string; }
@@ -295,7 +252,7 @@ async function fetchTeamSummary() {
   } catch (e) { console.error("Erreur fetch résumé", e) }
 }
 
-// --- CLASSEMENT ---
+// --- CLASSEMENT (CORRECTION DU TRI) ---
 const classement = ref<any[]>([])
 const isLoadingClassement = ref(true)
 async function fetchClassement() {
@@ -303,7 +260,10 @@ async function fetchClassement() {
   try {
     const res = await fetch('http://localhost:8080/ranking')
     const data = await res.json()
-    if (data?.docs) classement.value = data.docs
+    if (data?.docs) {
+      // Correction : Tri forcé par position (croissant : 1, 2, 3...)
+      classement.value = data.docs.sort((a: any, b: any) => a.classement_place - b.classement_place)
+    }
   } catch (e) { console.error(e) } finally { isLoadingClassement.value = false }
 }
 
@@ -383,13 +343,5 @@ onMounted(() => {
 <style scoped>
 .card{ background: #fff; border: 1px solid #F1F1F4; border-radius: 18px; box-shadow: 0 16px 36px -14px rgba(16,24,40,0.10); }
 .btn-gradient{ border-radius: 9999px; padding: 8px 14px; color: #fff; font-weight: 600; background: linear-gradient(90deg, #F472B6 0%, #A78BFA 100%); box-shadow: 0 8px 22px rgba(244,114,182,0.25); }
-.section-title{ color:#6B21A8; font-weight:600; font-size: 15px; position:relative; padding-bottom:.35rem; }
-.section-title::after{ content:""; position:absolute; left:0; bottom:0; width:210px; height:3px; border-radius:6px; background: linear-gradient(90deg,#60A5FA 0%,#A78BFA 50%,#F472B6 100%); opacity:.75; }
 .stat-chip{ background:#FAFAFB; border:1px solid #F1F1F4; border-radius:14px; padding:10px 12px; display:flex; flex-direction:column; gap:4px; box-shadow: 0 6px 16px -10px rgba(16,24,40,0.10); }
-.kpi-card{ background:#fff; border:1px solid #F1F1F4; border-radius:16px; padding:18px 16px; box-shadow: 0 10px 26px -16px rgba(16,24,40,0.12); }
-.kpi-head{ display:flex; align-items:center; justify-content:space-between; font-size:13px; color:#6B7280; }
-.kpi-value{ margin-top:6px; font-size:28px; font-weight:700; color:#111827; line-height:1; }
-.kpi-trend{ margin-top:4px; font-size:12px; font-weight:600; }
-.kpi-trend.up{ color:#10B981; }
-.kpi-trend.down{ color:#EF4444; }
 </style>

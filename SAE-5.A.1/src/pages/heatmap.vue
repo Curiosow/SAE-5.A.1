@@ -90,7 +90,9 @@
             <div>
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Joueuse (Sambre)</label>
               <select v-model="selectedPlayer" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
-                <option value="">Toute l'équipe</option>
+                <option value="">
+                  {{ selectedContext === 'attack' ? 'Toute l\'équipe' : 'Toute la Défence' }}
+                </option>
                 <option v-for="p in playersList" :key="p" :value="p">{{ p }}</option>
               </select>
             </div>
@@ -99,7 +101,9 @@
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Résultat</label>
               <select v-model="selectedResult" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
                 <option value="">Tous les tirs</option>
-                <option value="But">Buts uniquement</option>
+                <option value="But">
+                  {{ selectedContext === 'attack' ? 'Buts uniquement' : 'Buts encaissés uniquement' }}
+                </option>
                 <option value="Echec">Tirs ratés / Arrêts</option>
                 <option value="Pertes">Pertes de balle</option>
               </select>
@@ -132,40 +136,45 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 
+// Interface pour les événements de handball
+interface HandballEvent {
+  nom: string;
+  resultat: string;
+  secteur: string;
+  joueuse: string;
+  lieupb: string;
+}
+
 // --- 1. CONFIGURATION ---
-// Mapping des zones pour un terrain de HANDBALL (avec la zone en D en bas)
-// Les coordonnées sont en pourcentage (x: 0=gauche, 100=droite; y: 0=haut, 100=bas)
+// Mapping des zones pour un terrain de HANDBALL
 const ZONE_MAPPING: Record<string, {x: number, y: number, label: string}> = {
-  // --- AILES (Proche du but / 6m) ---
+// --- AILES (Proche du but / 6m) ---
   "ALG": { x: 20, y: 63, label: "Aile Gauche" },
   "ALD": { x: 80, y: 63, label: "Aile Droite" },
 
-  // --- ARRIERES (9m) ---
+// --- ARRIERES (9m) ---
   "9m G": { x: 29, y: 25, label: "Arr. Gauche (9m)" },
   "9m D": { x: 71, y: 25, label: "Arr. Droit (9m)" },
-  "Central": { x: 50, y: 20, label: "Demi-Centre" }, // Légèrement plus en retrait
-
-  // --- PIVOT (6m) / ZONES PROCHES ---
+  "Central": { x: 50, y: 20, label: "Demi-Centre" },
+// --- PIVOT (6m) / ZONES PROCHES ---
   "6m G": { x: 26, y: 52, label: "Pivot Gauche" },
   "6m D": { x: 74, y: 52, label: "Pivot Droit" },
-  "6m":   { x: 50, y: 41, label: "Pivot Axe (6m)" }, // Sur la ligne des 6m
-  "Zone": { x: 66, y: 45, label: "Zone (6m - Proche but)" }, // Très proche du but
-
-  // --- SECTEURS CHIFFRÉS (FFHB) ---
-  "1 2": { x: 34, y: 45, label: "Secteur 1-2 (Ext G)" }, // Juste avant l'aile
-  "2 3": { x: 35, y: 34, label: "Secteur 2-3 (Int G)" }, // Entre 9m et 6m
-  "3 4": { x: 50, y: 31, label: "Secteur 3-4 (Central)" }, // Entre 9m et 6m
-  "4 5": { x: 65, y: 34, label: "Secteur 4-5 (Int D)" }, // Entre 9m et 6m
-  "5 6": { x: 66, y: 45, label: "Secteur 5-6 (Ext D)" }, // Juste avant l'aile
-
-  // --- SPÉCIAUX (MAINTENANT ACTIVÉ) ---
-  "7m": { x: 50, y: 91, label: "Jet de 7m" }, // Ligne des 7m
-  "CA": { x: 30, y: 91, label: "Contre-Attaque" }, // Mappé sur la zone centrale avant le 9m
-  "ER": { x: 70, y: 91, label: "Engagement Rapide" }, // Devant le 9m
+  "6m": { x: 50, y: 41, label: "Pivot Axe (6m)" },
+  "Zone": { x: 66, y: 45, label: "Zone (6m - Proche but)" },
+// --- SECTEURS CHIFFRÉS (FFHB) ---
+  "1 2": { x: 34, y: 45, label: "Secteur 1-2 (Ext G)" },
+  "2 3": { x: 35, y: 34, label: "Secteur 2-3 (Int G)" },
+  "3 4": { x: 50, y: 31, label: "Secteur 3-4 (Central)" },
+  "4 5": { x: 65, y: 34, label: "Secteur 4-5 (Int D)" },
+  "5 6": { x: 66, y: 45, label: "Secteur 5-6 (Ext D)" },
+// --- SPÉCIAUX ---
+  "7m": { x: 50, y: 91, label: "Jet de 7m" },
+  "CA": { x: 30, y: 91, label: "Contre-Attaque" },
+  "ER": { x: 70, y: 91, label: "Engagement Rapide" },
 };
 
 // --- 2. ÉTAT ---
-const events = ref<any[]>([])
+const events = ref<HandballEvent[]>([])
 const isLoading = ref(false)
 const intensity = ref(60)
 const isDebugMode = ref(false)
@@ -175,39 +184,22 @@ const selectedPlayer = ref('')
 const selectedResult = ref('') // But, Echec, etc.
 const selectedContext = ref('attack') // 'attack' | 'defense'
 
-// --- 3. LOGIQUE DE NORMALISATION (MISE À JOUR) ---
+// Liste des joueuses spéciales dont les stats d'attaque sont transférées en défense
+const SPECIAL_DEFENSE_PLAYERS = ['ALIX', 'JUSTICIA'];
+
+// --- 3. LOGIQUE DE NORMALISATION (Zone) ---
 function normalizeZone(rawZone: string): string | null {
   if (!rawZone) return null;
   const z = rawZone.trim();
 
-  // ----------------------------------------------------
-  // NOUVELLES RÈGLES DE NORMALISATION POUR LES CAS IGNORÉS
-  // ----------------------------------------------------
-
-  // 1. Gérer les 7m (Jet 7m)
   if (z.includes("Jet 7m") || z.includes("7m")) return "7m";
-
-  // 2. Gérer les Contre-Attaques (CA) et Engagement Rapide (ER)
-  // On priorise la reconnaissance de "CA" et "ER" pour les actions de transition
   if (z.includes("CA")) return "CA";
   if (z.includes("ER")) return "ER";
+  if (z.includes("But vide")) return "Central";
 
-  // 3. Gérer le But Vide
-  if (z.includes("But vide")) {
-    // Les tirs But Vide n'ont pas de position précise, on les mappe sur une zone de tir de loin.
-    return "Central";
-  }
-
-  // 4. Gérer les zones vagues ou complexes (suspension/appui) et "9m +"
-  if (z.includes("Central 7m 9m appui") || z.includes("7m 9m central suspension") || z.includes("9m +")) {
-    return "Central";
-  }
+  if (z.includes("Central 7m 9m appui") || z.includes("7m 9m central suspension") || z.includes("9m +")) return "Central";
   if (z.includes("7m 9m Ext G")) return "9m G";
   if (z.includes("7m 9m Ext D")) return "9m D";
-
-  // ----------------------------------------------------
-  // ANCIENNES RÈGLES (conservées pour le nettoyage de base)
-  // ----------------------------------------------------
 
   if (z.includes("ALG")) return "ALG";
   if (z.includes("ALD")) return "ALD";
@@ -217,7 +209,6 @@ function normalizeZone(rawZone: string): string | null {
 
   if (z.includes("Central")) return "Central";
 
-  // Secteurs standards
   if (z.includes("1 2")) return "1 2";
   if (z.includes("2 3")) return "2 3";
   if (z.includes("3 4")) return "3 4";
@@ -233,32 +224,23 @@ function normalizeZone(rawZone: string): string | null {
 }
 
 // --- 4. API ---
-// Fonction utilitaire pour implémenter l'attente avec backoff exponentiel
 async function fetchWithRetry(url: string, options: RequestInit = {}, maxRetries = 5, delay = 1000): Promise<Response> {
   for (let i = 0; i < maxRetries; i++) {
     try {
       const response = await fetch(url, options);
-      if (response.ok) {
-        return response;
-      }
-      // Si la réponse n'est pas OK mais n'est pas une erreur réseau, on sort
-      if (response.status < 500) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+      if (response.ok) return response;
+      if (response.status < 500) throw new Error(`HTTP error! status: ${response.status}`);
     } catch (error) {
-      // Pour les erreurs réseau ou 5xx, on retente
       if (i === maxRetries - 1) throw error;
       await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
     }
   }
-  // Ne devrait pas être atteint si maxRetries > 0
   throw new Error("Maximum retries reached");
 }
 
 async function fetchData() {
   isLoading.value = true
   try {
-    // Utilisation de fetchWithRetry pour une robustesse accrue
     const res = await fetchWithRetry('http://localhost:8080/evenement')
     const json = await res.json()
     events.value = json.docs || []
@@ -270,34 +252,65 @@ async function fetchData() {
 
 // --- 5. FILTRAGE ET CALCULS ---
 const playersList = computed(() => {
-  const names = new Set(events.value.map(e => e.joueuse?.trim()).filter(Boolean));
-  return Array.from(names).sort();
+  if (selectedContext.value === 'attack') {
+    const names = new Set(events.value.map(e => e.joueuse?.trim()).filter(Boolean));
+    return Array.from(names)
+        // Filtre pour retirer ALIX et JUSTICIA du mode attaque
+        .filter(name => !SPECIAL_DEFENSE_PLAYERS.includes(name))
+        .sort();
+  } else {
+    // En mode défense, on propose seulement les joueuses spéciales
+    return SPECIAL_DEFENSE_PLAYERS;
+  }
 })
 
 const filteredEvents = computed(() => {
   return events.value.filter(e => {
     const nomAction = (e.nom || "").trim();
     const res = (e.resultat || "").trim();
+    const joueuseName = (e.joueuse || "").trim();
 
-    // 1. Filtre Contexte (Attaque vs Défense)
-    // Logique ajustée : Si une joueuse est renseignée, c'est presque toujours une action d'attaque de Sambre
+// Définir les indicateurs de type d'action
     const isSambreAttack = e.joueuse || nomAction.startsWith("Att");
     const isOpponentShot = nomAction.startsWith("Déf") || nomAction.includes("0-6");
 
+// Vrai si une joueuse spéciale est sélectionnée en mode Défense
+    const isSpecialDefensePlayerSelected = selectedContext.value === 'defense' && SPECIAL_DEFENSE_PLAYERS.includes(selectedPlayer.value);
+
+// --- 1. Filtre Contexte & Joueuse (Logique combinée) ---
     if (selectedContext.value === 'attack') {
+      // Logique standard d'attaque (Sambre)
       if (!isSambreAttack || isOpponentShot) return false;
-    }
-    else if (selectedContext.value === 'defense') {
-      // On cherche les actions de l'adversaire (buts encaissés)
-      if (isSambreAttack) return false;
-      // On filtre pour ne garder que les actions pertinentes (tirs de l'adversaire ou buts)
-      if (!isOpponentShot && res !== 'But') return false;
+
+      // Exclure ALIX/JUSTICIA des stats d'attaque de toute l'équipe
+      if (SPECIAL_DEFENSE_PLAYERS.includes(joueuseName)) return false;
+
+      // Filtre Joueuse
+      if (selectedPlayer.value && joueuseName !== selectedPlayer.value) return false;
+
+    } else if (selectedContext.value === 'defense') {
+
+      if (isSpecialDefensePlayerSelected) {
+        // CAS SPÉCIAL: Afficher les stats d'ATTAQUE de la joueuse sélectionnée (ALIX ou JUSTICIA)
+
+        // 1. Doit être une action d'attaque de Sambre
+        if (!isSambreAttack || isOpponentShot) return false;
+
+        // 2. Doit être l'action de la joueuse sélectionnée
+        if (joueuseName !== selectedPlayer.value) return false;
+
+      } else {
+        // CAS "TOUTE LA DÉFENSE" (selectedPlayer.value est vide): affiche l'ATTQUE combinée d'ALIX et JUSTICIA
+
+        // 1. Doit être une action d'attaque de Sambre
+        if (!isSambreAttack || isOpponentShot) return false;
+
+        // 2. Doit être l'action d'une des joueuses spéciales
+        if (!SPECIAL_DEFENSE_PLAYERS.includes(joueuseName)) return false;
+      }
     }
 
-    // 2. Filtre Joueuse (Seulement en mode attaque)
-    if (selectedPlayer.value && e.joueuse?.trim() !== selectedPlayer.value) return false;
-
-    // 3. Filtre Résultat
+// --- 2. Filtre Résultat (Applicable aux deux contextes) ---
     const isGoal = res === 'But';
     const isTurnover = ['PDB', 'Marcher', 'Passage en force'].includes(res) || e.lieupb;
 
@@ -318,11 +331,10 @@ const heatmapPoints = computed(() => {
   const map: Record<string, { count: number, goals: number, x: number, y: number, label: string }> = {}
   let maxVal = 0
   let unmapped = 0
-  // Nouveau : Stocker les actions ignorées pour le debug
   const ignoredActions: any[] = []
 
   filteredEvents.value.forEach(e => {
-    // On regarde 'lieupb' si c'est une perte de balle, sinon 'secteur'
+// On regarde 'lieupb' si c'est une perte de balle, sinon 'secteur'
     let rawZone = e.secteur || "";
     if (selectedResult.value === 'Pertes' && e.lieupb) rawZone = e.lieupb;
 
@@ -340,8 +352,7 @@ const heatmapPoints = computed(() => {
       if (map[key].count > maxVal) maxVal = map[key].count;
     } else {
       if (rawZone) {
-        unmapped++; // On compte seulement si y'avait une zone mais qu'on l'a pas trouvée
-        // Ajout de l'événement à la liste des actions ignorées
+        unmapped++;
         ignoredActions.push({
           action: e.nom,
           joueuse: e.joueuse,
@@ -354,16 +365,12 @@ const heatmapPoints = computed(() => {
 
   unmappedCount.value = unmapped;
 
-  // NOUVEAU : Afficher les actions ignorées dans la console si le mode debug est actif
   if (isDebugMode.value && ignoredActions.length > 0) {
     console.warn(`[DEBUG MODE] ${ignoredActions.length} Actions ignorées (secteur inconnu):`, ignoredActions);
   } else if (isDebugMode.value && ignoredActions.length === 0) {
     console.log("[DEBUG MODE] Aucune action ignorée.");
   }
 
-
-  // Retourne tableau avec max global attaché
-  // On s'assure que le tableau n'est pas vide pour prendre le max.
   const pointsArray = Object.values(map);
   return pointsArray.map(p => ({...p, max: maxVal || 1}));
 })
@@ -372,7 +379,7 @@ const heatmapPoints = computed(() => {
 const debugPoints = computed(() => {
   return Object.entries(ZONE_MAPPING).map(([k, v]) => ({
     ...v,
-    count: 1, // On met 1 pour qu'ils soient visibles en debug
+    count: 1,
     goals: 0,
     max: 1
   }))
@@ -381,28 +388,22 @@ const debugPoints = computed(() => {
 // --- 7. STYLE DYNAMIQUE ---
 function getStyle(count: number) {
   const points = heatmapPoints.value;
-  // Utilisez un array vide si points.length est 0, ou le max du premier élément s'il existe
   const max = points.length > 0 ? points[0].max : 1;
 
   if (isDebugMode.value) {
-    if (count === 0 && !max) { // Si c'est un point debug non mappé
+    if (count === 0 && !max) {
       return { backgroundColor: 'rgba(0,0,0,0.1)', width: '20px', height: '20px' }
     }
-    // Si on est en mode debug et que le point est mappé (count > 0) ou si on montre tous les points (count=1 pour debugPoints)
   }
 
-  // Formule logarithmique pour éviter que les grosses zones écrasent tout
-  // S'assurer que 'count' et 'max' sont au moins 1 pour éviter log(0)
   const safeCount = Math.max(1, count);
   const safeMax = Math.max(1, max);
 
   const ratio = Math.log(safeCount + 1) / Math.log(safeMax + 1);
-  const baseSize = isDebugMode.value ? 20 : 25; // Taille de base différente en debug
-  const size = baseSize + (ratio * (intensity.value * 0.8)); // Taille variable selon intensité
+  const baseSize = isDebugMode.value ? 20 : 25;
+  const size = baseSize + (ratio * (intensity.value * 0.8));
 
-  // Couleur basée sur le ratio (Bleu -> Vert -> Jaune -> Rouge)
-  // Hue: 240 (Bleu) -> 0 (Rouge)
-  const hue = (1 - ratio) * 200; // De 200 (bleu ciel pour peu d'actions) à 0 (rouge pour beaucoup d'actions)
+  const hue = (1 - ratio) * 200;
 
   return {
     backgroundColor: `hsla(${hue}, 90%, 50%, 0.7)`,

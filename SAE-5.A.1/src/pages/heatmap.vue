@@ -1,10 +1,8 @@
-
 <template>
   <main class="min-h-screen bg-[#F7F7FB]">
     <div class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 pt-24 pb-16">
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
 
-        <!-- SECTION GAUCHE : CARTE HEATMAP -->
         <section class="card p-6 sm:p-8 flex flex-col relative">
 
           <div v-if="isLoading" class="absolute inset-0 z-20 bg-white/80 flex items-center justify-center rounded-xl">
@@ -19,7 +17,6 @@
 
               <img src="/Terrain de basketball minimaliste.png" alt="Terrain de Handball" class="w-full h-auto object-contain opacity-90 select-none pointer-events-none relative z-0" />
 
-              <!-- AJOUT DE 'hover:z-50' pour que le point survolé passe au-dessus -->
               <div v-for="(zone, key) in heatmapPoints" :key="key"
                    class="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 hover:z-50 flex items-center justify-center group transition-all duration-500"
                    :style="{ top: zone.y + '%', left: zone.x + '%' }">
@@ -41,7 +38,6 @@
                 </div>
               </div>
 
-              <!-- INDICATEUR CONTEXTE (GAUCHE) -->
               <div class="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider shadow-sm backdrop-blur-md"
                    :class="selectedContext === 'defense' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'">
                 {{ selectedContext === 'defense' ? '🛡️ Défense (Buts Encaissés)' : '🤾 Attaque (Buts Marqués)' }}
@@ -51,13 +47,11 @@
           </div>
         </section>
 
-        <!-- SECTION DROITE : CONFIGURATION -->
         <aside class="card p-6 h-fit sticky top-24 bg-white border border-gray-100 rounded-2xl shadow-sm">
           <h2 class="text-lg font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Configuration</h2>
 
           <div class="space-y-5">
 
-            <!-- 1. NOUVEAU FILTRE : MATCH -->
             <div>
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Sélection du Match</label>
               <select v-model="selectedMatchId" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
@@ -68,7 +62,6 @@
               </select>
             </div>
 
-            <!-- 2. CONTEXTE -->
             <div>
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Contexte de jeu</label>
               <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-lg">
@@ -90,7 +83,6 @@
               </p>
             </div>
 
-            <!-- 3. JOUEUSE -->
             <div>
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">
                 {{ selectedContext === 'attack' ? 'Tireuse (Sambre)' : 'Gardienne / Défenseur' }}
@@ -101,7 +93,6 @@
               </select>
             </div>
 
-            <!-- 4. RÉSULTAT -->
             <div>
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Filtre Résultat</label>
               <select v-model="selectedResult" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
@@ -156,17 +147,24 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 
+const apiUrl = useApiUrl()
+
 interface HandballEvent {
   nom: string;
   resultat: string;
   secteur: string;
   joueuse: string;
   lieupb: string;
+  matchId: number;
 }
 
-const apiUrl = useApiUrl()
+interface Match {
+  id: number;
+  adversaire?: string;
+  dateMatch?: string;
+}
 
-// --- 1. CONFIGURATION DU TERRAIN ---
+// --- CONFIGURATION DU TERRAIN ---
 const ZONE_MAPPING: Record<string, {x: number, y: number, label: string}> = {
   // --- AILES (Proche du but / 6m) ---
   "ALG": { x: 20, y: 63, label: "Aile Gauche" },
@@ -192,19 +190,16 @@ const ZONE_MAPPING: Record<string, {x: number, y: number, label: string}> = {
   "ER": { x: 70, y: 91, label: "Engagement Rapide" },
 };
 
-// --- 2. ÉTAT ---
 const allEvents = ref<HandballEvent[]>([])
 const matches = ref<Match[]>([])
 const isLoading = ref(false)
 const intensity = ref(60)
 
-// Filtres
 const selectedPlayer = ref('')
-const selectedResult = ref('') // 'But', 'Echec', 'Pertes', ''
-const selectedContext = ref('attack') // 'attack' | 'defense'
+const selectedResult = ref('')
+const selectedContext = ref('attack')
 const selectedMatchId = ref<number | null>(null)
 
-// --- 3. NORMALISATION PUISSANTE ---
 function normalizeZone(rawZone: string): string | null {
   if (!rawZone) return null;
   const z = rawZone.trim();
@@ -240,10 +235,9 @@ function normalizeZone(rawZone: string): string | null {
   return null;
 }
 
-// --- 4. RÉCUPÉRATION DES DONNÉES ---
 async function fetchMatches() {
   try {
-    const res = await fetch('http://localhost:8080/match')
+    const res = await fetch(`${apiUrl}/match`)
     const json = await res.json()
     matches.value = json.docs || []
   } catch (e) {
@@ -253,7 +247,7 @@ async function fetchMatches() {
 
 async function fetchEvents() {
   try {
-    const res = await fetchWithRetry(`${apiUrl}/evenement`)
+    const res = await fetch(`${apiUrl}/evenement`)
     const json = await res.json()
     allEvents.value = json.docs || []
   } catch (e) {
@@ -268,10 +262,8 @@ async function fetchAllData() {
   isLoading.value = false
 }
 
-// --- 5. LOGIQUE DE FILTRAGE INTELLIGENTE ---
 const filteredEvents = computed(() => {
   return allEvents.value.filter(e => {
-    // FILTRE MATCH
     if (selectedMatchId.value !== null && e.matchId !== selectedMatchId.value) {
       return false;
     }
@@ -280,7 +272,6 @@ const filteredEvents = computed(() => {
     const res = (e.resultat || "").trim();
     const joueuse = (e.joueuse || "").trim();
 
-    // DÉTECTION DU TYPE D'ACTION
     const isSambreAttack = nom.startsWith("Att") ||
         nom.startsWith("ER") ||
         nom.startsWith("CA") ||
@@ -294,17 +285,14 @@ const filteredEvents = computed(() => {
         nom.startsWith("Repli") ||
         nom.includes("Adversaire");
 
-    // 1. FILTRE CONTEXTE
     if (selectedContext.value === 'attack') {
       if (!isSambreAttack) return false;
     } else {
       if (!isOpponentShot) return false;
     }
 
-    // 2. FILTRE JOUEUSE
     if (selectedPlayer.value && joueuse !== selectedPlayer.value) return false;
 
-    // 3. FILTRE RÉSULTAT
     const isGoal = res === 'But';
     const isTurnover = ['PDB', 'Marcher', 'Passage en force'].includes(res) || (selectedResult.value === 'Pertes' && e.lieupb);
 
@@ -323,7 +311,6 @@ const playersList = computed(() => {
 
   const names = new Set<string>();
 
-  // On filtre la liste des joueurs selon le match sélectionné
   const eventsForPlayerList = selectedMatchId.value !== null
       ? allEvents.value.filter(e => e.matchId === selectedMatchId.value)
       : allEvents.value;
@@ -338,7 +325,6 @@ const playersList = computed(() => {
 
 const unmappedCount = ref(0)
 
-// --- 6. GÉNÉRATION HEATMAP ---
 const heatmapPoints = computed(() => {
   const map: Record<string, { count: number, goals: number, x: number, y: number, label: string }> = {}
   let maxVal = 0

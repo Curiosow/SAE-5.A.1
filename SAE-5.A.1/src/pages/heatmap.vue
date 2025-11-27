@@ -1,3 +1,4 @@
+
 <template>
   <main class="min-h-screen bg-[#F7F7FB]">
     <div class="mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8 pt-24 pb-16">

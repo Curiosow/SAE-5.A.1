@@ -49,7 +49,7 @@ const coachItems = [
 ]
 
 const playerItems = [
-  { label: 'Heatmaps', href: '/heatmap' },
+  { label: 'Vous', href: '/joueuseprofil' },
 ]
 
 const isCoach = computed(() => account_type.value === 'coach')

@@ -115,7 +115,7 @@ function handleFile(e: Event) {
     encoding: "UTF-8",
     complete: async (results) => {
       try {
-        // 1. Nettoyage CSV (inchangé)
+        // 1. Nettoyage CSV
         const events = results.data.map((row: any) => ({
           nom: row['Nom']?.trim(),
           position: parseFloat((row['Position'] || "0").replace(',', '.')),
@@ -137,10 +137,8 @@ function handleFile(e: Event) {
           enclenchements6c5: row['Enclenchements 6 c 5']?.trim()
         })).filter((e: any) => e.nom);
 
-        // 2. CALCUL DES INFOS MANQUANTES
         const m = selectedMatch.value;
 
-        // Trouver l'adversaire (celui qui n'est pas Sambre)
         let adversaireName = "";
         const myTeamName = "SAMBRE AVESNOIS HANDBALL";
         if (m.competition_engagement_equipe_libelle_1 === myTeamName) {
@@ -149,15 +147,15 @@ function handleFile(e: Event) {
           adversaireName = m.competition_engagement_equipe_libelle_1;
         }
 
-        // Définir le lieu (Ville + Salle ou Domicile/Ext)
+
         const lieuInfo = (String(m.ville_code_postal) === '59600') ? 'Domicile' : 'Extérieur';
 
-        // 3. Construction du Payload complet
+
         const payload = {
-          rencontreId: String(m.id), // ID technique API
+          rencontreId: String(m.id), 
           adversaire: adversaireName,
           lieu: lieuInfo,
-          dateMatch: m.rencontre_conclusion_info_date_match, // On envoie aussi la date
+          dateMatch: m.rencontre_conclusion_info_date_match,
           events: events
         };
 

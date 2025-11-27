@@ -43,7 +43,8 @@ const globalItems = [
 
 const coachItems = [
   { label: 'Joueuses', href: '/joueuses' },
-  { label: 'Upload', href: '/match' },
+  { label: 'Téléverser un match', href: '/match' },
+  { label: 'Matchs', href: '/comparaison' },
   { label: 'Gestion', href: '/gestion' },
   { label: 'Heatmaps', href: '/heatmap' },
 ]

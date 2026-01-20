@@ -98,10 +98,10 @@
               <select v-model="selectedResult" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
                 <option value="">Tout (Tirs + Pertes)</option>
                 <option value="But">
-                  {{ selectedContext === 'attack' ? 'Buts Marqués ✅' : 'Buts Encaissés ❌' }}
+                  {{ selectedContext === 'attack' ? 'Buts Marqués ' : 'Buts Encaissés ' }}
                 </option>
                 <option value="Echec">
-                  {{ selectedContext === 'attack' ? 'Tirs Ratés / Arrêts ❌' : 'Arrêts Gardienne ✅' }}
+                  {{ selectedContext === 'attack' ? 'Tirs Ratés / Arrêts ' : 'Arrêts Gardienne ' }}
                 </option>
                 <option value="Pertes">Pertes de balle</option>
               </select>

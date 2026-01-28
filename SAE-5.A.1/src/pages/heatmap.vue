@@ -4,7 +4,6 @@
       <div class="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6">
 
         <section class="card p-6 sm:p-8 flex flex-col relative">
-
           <div v-if="isLoading" class="absolute inset-0 z-20 bg-white/80 flex items-center justify-center rounded-xl">
             <div class="flex flex-col items-center gap-3">
               <div class="animate-spin rounded-full h-10 w-10 border-4 border-rose-500 border-t-transparent"></div>
@@ -22,7 +21,7 @@
                    :style="{ top: zone.y + '%', left: zone.x + '%' }">
 
                 <div class="rounded-full transition-all duration-500 ease-out blur-md mix-blend-multiply"
-                     :style="getStyle(zone.count)">
+                     :style="getStyle(zone)">
                 </div>
 
                 <div class="absolute w-1 h-1 bg-black/20 rounded-full"></div>
@@ -40,9 +39,8 @@
 
               <div class="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider shadow-sm backdrop-blur-md"
                    :class="selectedContext === 'defense' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'">
-                {{ selectedContext === 'defense' ? '🛡️ Défense (Buts Encaissés)' : '🤾 Attaque (Buts Marqués)' }}
+                {{ selectedContext === 'defense' ? ' Défense (Buts Encaissés)' : '🤾 Attaque (Buts Marqués)' }}
               </div>
-
             </div>
           </div>
         </section>
@@ -51,7 +49,6 @@
           <h2 class="text-lg font-bold text-gray-900 mb-6 border-b border-gray-100 pb-4">Configuration</h2>
 
           <div class="space-y-5">
-
             <div>
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Sélection du Match</label>
               <select v-model="selectedMatchId" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
@@ -65,16 +62,14 @@
             <div>
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Contexte de jeu</label>
               <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-lg">
-                <button
-                    @click="selectedContext = 'attack'; selectedPlayer = ''"
-                    class="py-2 text-xs font-bold rounded-md transition-all"
-                    :class="selectedContext === 'attack' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                <button @click="selectedContext = 'attack'; selectedPlayer = ''"
+                        class="py-2 text-xs font-bold rounded-md transition-all"
+                        :class="selectedContext === 'attack' ? 'bg-white text-emerald-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
                   Notre Attaque
                 </button>
-                <button
-                    @click="selectedContext = 'defense'; selectedPlayer = ''"
-                    class="py-2 text-xs font-bold rounded-md transition-all"
-                    :class="selectedContext === 'defense' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
+                <button @click="selectedContext = 'defense'; selectedPlayer = ''"
+                        class="py-2 text-xs font-bold rounded-md transition-all"
+                        :class="selectedContext === 'defense' ? 'bg-white text-red-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'">
                   Notre Défense
                 </button>
               </div>
@@ -97,12 +92,8 @@
               <label class="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Filtre Résultat</label>
               <select v-model="selectedResult" class="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium focus:ring-2 focus:ring-rose-500 outline-none">
                 <option value="">Tout (Tirs + Pertes)</option>
-                <option value="But">
-                  {{ selectedContext === 'attack' ? 'Buts Marqués ' : 'Buts Encaissés ' }}
-                </option>
-                <option value="Echec">
-                  {{ selectedContext === 'attack' ? 'Tirs Ratés / Arrêts ' : 'Arrêts Gardienne ' }}
-                </option>
+                <option value="But">{{ selectedContext === 'attack' ? 'Buts Marqués' : 'Buts Encaissés' }}</option>
+                <option value="Echec">{{ selectedContext === 'attack' ? 'Tirs Ratés / Arrêts' : 'Arrêts Gardienne' }}</option>
                 <option value="Pertes">Pertes de balle</option>
               </select>
             </div>
@@ -111,34 +102,22 @@
               ⚠️ {{ unmappedCount }} actions ignorées (secteur inconnu)
             </div>
 
-            <!-- LÉGENDE -->
             <div class="border-t border-gray-100 pt-5 mt-4">
               <h4 class="font-bold text-gray-500 uppercase text-[10px] mb-3 tracking-wider">Légende Densité</h4>
               <div class="flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
                 <div class="flex flex-col items-center gap-1.5">
-                  <div class="w-8 h-8 rounded-full blur-sm opacity-80"
-                       :style="{ backgroundColor: selectedContext === 'attack' ? 'hsl(170, 90%, 40%)' : 'hsl(0, 90%, 50%)' }"></div>
+                  <div class="w-8 h-8 rounded-full blur-sm opacity-80" :style="{ backgroundColor: selectedContext === 'attack' ? 'hsl(170, 90%, 40%)' : 'hsl(0, 90%, 50%)' }"></div>
                   <span class="text-[9px] font-bold text-gray-400 uppercase">Faible</span>
                 </div>
-
-                <div class="h-px flex-1 bg-gradient-to-r from-gray-200 to-gray-200 relative">
-                  <div class="absolute inset-0 bg-gray-200"></div>
-                </div>
-
+                <div class="h-px flex-1 bg-gray-200"></div>
                 <div class="flex flex-col items-center gap-1.5">
-                  <div class="w-10 h-10 rounded-full blur-md opacity-80 shadow-sm"
-                       :style="{ backgroundColor: selectedContext === 'attack' ? 'hsl(20, 90%, 50%)' : 'hsl(30, 90%, 50%)' }"></div>
+                  <div class="w-10 h-10 rounded-full blur-md opacity-80 shadow-sm" :style="{ backgroundColor: selectedContext === 'attack' ? 'hsl(20, 90%, 50%)' : 'hsl(30, 90%, 50%)' }"></div>
                   <span class="text-[9px] font-bold text-gray-400 uppercase">Élevée</span>
                 </div>
               </div>
-              <p class="mt-2 text-[10px] text-gray-400 text-center italic">
-                La taille et la couleur indiquent le volume d'actions.
-              </p>
             </div>
-
           </div>
         </aside>
-
       </div>
     </div>
   </main>
@@ -150,41 +129,27 @@ import { ref, computed, onMounted } from 'vue'
 const apiUrl = useApiUrl()
 
 interface HandballEvent {
-  nom: string;
-  resultat: string;
-  secteur: string;
-  joueuse: string;
-  lieupb: string;
-  matchId: number;
+  nom: string; resultat: string; secteur: string; joueuse: string; lieupb: string; matchId: number;
 }
-
 interface Match {
-  id: number;
-  adversaire?: string;
-  dateMatch?: string;
+  id: number; adversaire?: string; dateMatch?: string;
 }
 
-// --- CONFIGURATION DU TERRAIN ---
 const ZONE_MAPPING: Record<string, {x: number, y: number, label: string}> = {
-  // --- AILES (Proche du but / 6m) ---
   "ALG": { x: 20, y: 63, label: "Aile Gauche" },
   "ALD": { x: 80, y: 63, label: "Aile Droite" },
-  // --- ARRIERES (9m) ---
   "9m G": { x: 29, y: 25, label: "Arr. Gauche (9m)" },
   "9m D": { x: 71, y: 25, label: "Arr. Droit (9m)" },
   "Central": { x: 50, y: 20, label: "Demi-Centre" },
-  // --- PIVOT (6m) / ZONES PROCHES ---
   "6m G": { x: 26, y: 52, label: "Pivot Gauche" },
   "6m D": { x: 74, y: 52, label: "Pivot Droit" },
   "6m": { x: 50, y: 41, label: "Pivot Axe (6m)" },
   "Zone": { x: 66, y: 45, label: "Zone (6m - Proche but)" },
-  // --- SECTEURS CHIFFRÉS (FFHB) ---
   "1 2": { x: 34, y: 45, label: "Secteur 1-2 (Ext G)" },
   "2 3": { x: 35, y: 34, label: "Secteur 2-3 (Int G)" },
   "3 4": { x: 50, y: 31, label: "Secteur 3-4 (Central)" },
   "4 5": { x: 65, y: 34, label: "Secteur 4-5 (Int D)" },
   "5 6": { x: 66, y: 45, label: "Secteur 5-6 (Ext D)" },
-  // --- SPÉCIAUX ---
   "7m": { x: 50, y: 41, label: "Jet de 7m" },
   "CA": { x: 50, y: 91, label: "Contre-Attaque" },
   "ER": { x: 70, y: 91, label: "Engagement Rapide" },
@@ -194,182 +159,105 @@ const allEvents = ref<HandballEvent[]>([])
 const matches = ref<Match[]>([])
 const isLoading = ref(false)
 const intensity = ref(60)
+const unmappedCount = ref(0)
 
 const selectedPlayer = ref('')
 const selectedResult = ref('')
 const selectedContext = ref('attack')
 const selectedMatchId = ref<number | null>(null)
 
+// Normalisation optimisée
 function normalizeZone(rawZone: string): string | null {
   if (!rawZone) return null;
   const z = rawZone.trim();
-
-  if (z === "PVT") return "6m";
-  if (z === "Marcher") return "Central";
-  if (z === "PF Mauvais bloc" || z === "KF") return "Zone";
-  if (z === "Autres" || z === "GE") return "Central";
-  if (z === "12") return "1 2";
-  if (z === "56") return "5 6";
-  if (z.includes("CA MB")) return "CA";
-
-  if (z.includes("Jet 7m") || z.includes("7m")) return "7m";
+  const directMap: Record<string, string> = {
+    "PVT": "6m", "Marcher": "Central", "PF Mauvais bloc": "Zone", "KF": "Zone",
+    "Autres": "Central", "GE": "Central", "12": "1 2", "56": "5 6", "But vide": "Central"
+  };
+  if (directMap[z]) return directMap[z];
+  if (z.includes("7m")) return "7m";
   if (z.includes("CA")) return "CA";
   if (z.includes("ER")) return "ER";
-  if (z.includes("But vide")) return "Central";
-
   if (z.includes("Central") || z.includes("9m +")) return "Central";
-  if (z.includes("Ext G")) return "9m G";
-  if (z.includes("Ext D")) return "9m D";
-
+  if (z.includes("Ext G") || z.includes("9m G")) return "9m G";
+  if (z.includes("Ext D") || z.includes("9m D")) return "9m D";
   if (z.includes("ALG")) return "ALG";
   if (z.includes("ALD")) return "ALD";
-  if (z.includes("1 2")) return "1 2";
-  if (z.includes("2 3")) return "2 3";
-  if (z.includes("3 4")) return "3 4";
-  if (z.includes("4 5")) return "4 5";
-  if (z.includes("5 6")) return "5 6";
-  if (z.includes("9m G")) return "9m G";
-  if (z.includes("9m D")) return "9m D";
-  if (z.includes("Zone")) return "Zone";
 
-  return null;
-}
-
-async function fetchMatches() {
-  try {
-    const res = await fetch(`${apiUrl}/match`)
-    const json = await res.json()
-    matches.value = json.docs || []
-  } catch (e) {
-    console.error("Erreur API Match:", e);
-  }
-}
-
-async function fetchEvents() {
-  try {
-    const res = await fetch(`${apiUrl}/evenement`)
-    const json = await res.json()
-    allEvents.value = json.docs || []
-  } catch (e) {
-    console.error("Erreur API Event:", e);
-    allEvents.value = []
-  }
+  const sectors = ["1 2", "2 3", "3 4", "4 5", "5 6", "Zone"];
+  return sectors.find(s => z.includes(s)) || null;
 }
 
 async function fetchAllData() {
   isLoading.value = true
-  await Promise.all([fetchMatches(), fetchEvents()])
-  isLoading.value = false
+  try {
+    const [resM, resE] = await Promise.all([fetch(`${apiUrl}/match`), fetch(`${apiUrl}/evenement`)]);
+    const [jsonM, jsonE] = await Promise.all([resM.json(), resE.json()]);
+    matches.value = jsonM.docs || [];
+    allEvents.value = jsonE.docs || [];
+  } catch (e) { console.error("Erreur API:", e); }
+  finally { isLoading.value = false; }
 }
 
 const filteredEvents = computed(() => {
+  const atkKeys = ["Att", "ER", "CA", "Transition", "But vide"];
+  const defKeys = ["Déf", "0-6", "1-5", "Repli"];
+
   return allEvents.value.filter(e => {
-    if (selectedMatchId.value !== null && e.matchId !== selectedMatchId.value) {
-      return false;
-    }
+    if (selectedMatchId.value !== null && e.matchId !== selectedMatchId.value) return false;
+    const nom = e.nom || "";
+    const isAtk = atkKeys.some(k => nom.startsWith(k)) || (nom.includes("7m") && !nom.includes("Adversaire"));
+    const isDef = defKeys.some(k => nom.startsWith(k)) || nom.includes("Adversaire");
 
-    const nom = (e.nom || "").trim();
-    const res = (e.resultat || "").trim();
-    const joueuse = (e.joueuse || "").trim();
+    if (selectedContext.value === 'attack' ? !isAtk : !isDef) return false;
+    if (selectedPlayer.value && e.joueuse !== selectedPlayer.value) return false;
 
-    const isSambreAttack = nom.startsWith("Att") ||
-        nom.startsWith("ER") ||
-        nom.startsWith("CA") ||
-        nom.startsWith("Transition") ||
-        nom.startsWith("But vide") ||
-        (nom.includes("7m") && !nom.includes("Adversaire"));
-
-    const isOpponentShot = nom.startsWith("Déf") ||
-        nom.startsWith("0-6") ||
-        nom.startsWith("1-5") ||
-        nom.startsWith("Repli") ||
-        nom.includes("Adversaire");
-
-    if (selectedContext.value === 'attack') {
-      if (!isSambreAttack) return false;
-    } else {
-      if (!isOpponentShot) return false;
-    }
-
-    if (selectedPlayer.value && joueuse !== selectedPlayer.value) return false;
-
-    const isGoal = res === 'But';
-    const isTurnover = ['PDB', 'Marcher', 'Passage en force'].includes(res) || (selectedResult.value === 'Pertes' && e.lieupb);
+    const isGoal = e.resultat === 'But';
+    const isTurnover = ['PDB', 'Marcher', 'Passage en force'].includes(e.resultat) || (selectedResult.value === 'Pertes' && e.lieupb);
 
     if (selectedResult.value === 'But' && !isGoal) return false;
     if (selectedResult.value === 'Echec' && (isGoal || isTurnover)) return false;
     if (selectedResult.value === 'Pertes' && !isTurnover) return false;
-
     return true;
   })
 })
 
 const playersList = computed(() => {
-  if (selectedContext.value === 'defense') {
-    return ['ALIX', 'JUSTICIA'];
-  }
-
+  if (selectedContext.value === 'defense') return ['ALIX', 'JUSTICIA'];
   const names = new Set<string>();
-
-  const eventsForPlayerList = selectedMatchId.value !== null
-      ? allEvents.value.filter(e => e.matchId === selectedMatchId.value)
-      : allEvents.value;
-
-  eventsForPlayerList.forEach(e => {
-    const nom = e.nom || "";
-    const isSambreAttack = nom.startsWith("Att") || nom.startsWith("ER") || nom.startsWith("CA") || nom.startsWith("Transition");
-    if (isSambreAttack && e.joueuse) names.add(e.joueuse);
+  const events = selectedMatchId.value ? allEvents.value.filter(e => e.matchId === selectedMatchId.value) : allEvents.value;
+  events.forEach(e => {
+    if (e.joueuse && ["Att", "ER", "CA"].some(k => (e.nom || "").startsWith(k))) names.add(e.joueuse);
   });
   return Array.from(names).sort();
 })
 
-const unmappedCount = ref(0)
-
 const heatmapPoints = computed(() => {
-  const map: Record<string, { count: number, goals: number, x: number, y: number, label: string }> = {}
-  let maxVal = 0
-  let unmapped = 0
+  const map: Record<string, any> = {};
+  let maxVal = 0; let unmapped = 0;
 
   filteredEvents.value.forEach(e => {
-    let rawZone = e.secteur || "";
-    if (selectedResult.value === 'Pertes' && e.lieupb) rawZone = e.lieupb;
-
-    const key = normalizeZone(rawZone);
-
+    const key = normalizeZone(selectedResult.value === 'Pertes' ? e.lieupb : e.secteur);
     if (key && ZONE_MAPPING[key]) {
-      if (!map[key]) {
-        map[key] = { ...ZONE_MAPPING[key], count: 0, goals: 0 };
-      }
+      if (!map[key]) map[key] = { ...ZONE_MAPPING[key], count: 0, goals: 0 };
       map[key].count++;
       if (e.resultat === 'But') map[key].goals++;
-      if (map[key].count > maxVal) maxVal = map[key].count;
-    } else {
-      if (rawZone) unmapped++;
-    }
-  })
+      maxVal = Math.max(maxVal, map[key].count);
+    } else if (e.secteur || e.lieupb) { unmapped++; }
+  });
 
   unmappedCount.value = unmapped;
-  const pointsArray = Object.values(map);
-  return pointsArray.map(p => ({...p, max: maxVal || 1}));
+  return Object.values(map).map(p => ({ ...p, max: maxVal || 1 }));
 })
 
-function getStyle(count: number) {
-  const points = heatmapPoints.value;
-  const max = points.length > 0 ? points[0].max : 1;
-  const safeCount = Math.max(1, count);
-  const ratio = Math.log(safeCount + 1) / Math.log(max + 1);
-  const baseSize = 30;
-  const size = baseSize + (ratio * (intensity.value * 0.6));
-
-  const hue = selectedContext.value === 'attack'
-      ? (1 - ratio) * 150 + 20
-      : 0 + (ratio * 30);
-
+function getStyle(zone: any) {
+  const ratio = Math.log(zone.count + 1) / Math.log(zone.max + 1);
+  const size = 30 + (ratio * (intensity.value * 0.6));
+  const hue = selectedContext.value === 'attack' ? (1 - ratio) * 150 + 20 : ratio * 30;
   return {
     backgroundColor: `hsla(${hue}, 90%, 50%, 0.7)`,
     boxShadow: `0 0 ${size/1.5}px hsla(${hue}, 90%, 50%, 0.5)`,
-    width: `${size}px`,
-    height: `${size}px`,
+    width: `${size}px`, height: `${size}px`,
   }
 }
 
@@ -377,8 +265,5 @@ onMounted(() => fetchAllData())
 </script>
 
 <style scoped>
-.card {
-  background: #fff;
-  border-radius: 18px;
-}
+.card { background: #fff; border-radius: 18px; }
 </style>

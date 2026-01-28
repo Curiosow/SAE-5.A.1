@@ -243,6 +243,7 @@ function getTeamLogo(teamName: string) { return teamLogoMap.value.get(teamName) 
 
 // --- SUMMARY ---
 const summary = ref({ wins: 0, draws: 0, losses: 0, points: 0, rank: 0, form: 'V‑V‑N‑V‑V' })
+const isLoadingSummary = ref(true);
 async function fetchTeamSummary() {
   try {
     const res = await fetch(`${apiUrl}/rankingAvesnois`)
@@ -253,7 +254,7 @@ async function fetchTeamSummary() {
   } catch (e) { console.error("Erreur fetch résumé", e) }
 }
 
-// --- CLASSEMENT (CORRECTION DU TRI) ---
+// --- CLASSEMENT ---
 const classement = ref<any[]>([])
 const isLoadingClassement = ref(true)
 async function fetchClassement() {
@@ -262,7 +263,6 @@ async function fetchClassement() {
     const res = await fetch(`${apiUrl}/ranking`)
     const data = await res.json()
     if (data?.docs) {
-      // Correction : Tri forcé par position (croissant : 1, 2, 3...)
       classement.value = data.docs.sort((a: any, b: any) => a.classement_place - b.classement_place)
     }
   } catch (e) { console.error(e) } finally { isLoadingClassement.value = false }

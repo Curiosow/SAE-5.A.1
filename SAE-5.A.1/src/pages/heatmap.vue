@@ -39,7 +39,7 @@
 
               <div class="absolute top-4 left-4 z-10 px-3 py-1.5 rounded-lg border text-xs font-bold uppercase tracking-wider shadow-sm backdrop-blur-md"
                    :class="selectedContext === 'defense' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-emerald-50 border-emerald-200 text-emerald-600'">
-                {{ selectedContext === 'defense' ? ' Défense (Buts Encaissés)' : '🤾 Attaque (Buts Marqués)' }}
+                {{ selectedContext === 'defense' ? ' Défense (Buts Encaissés)' : ' Attaque (Buts Marqués)' }}
               </div>
             </div>
           </div>

@@ -38,16 +38,24 @@ async function submitLogin() {
     })
 
     if (!res.ok) {
-      const body = await res.json().catch(() => ({}))
-      throw new Error(body.message || `Erreur ${res.status}`)
+      if (res.status === 401) {
+        errorMsg.value = 'Email ou mot de passe incorrect.'
+      } else {
+        const body = await res.json().catch(() => ({}))
+        errorMsg.value = body.message || `Erreur ${res.status}`
+      }
+    } else {
+      const mockToken = 'mock-token-' + Math.random().toString(36).substring(2) + '-' + Date.now()
+      localStorage.setItem('auth_token', mockToken)
+
+      getAllInformations()
     }
-
-    const mockToken = 'mock-token-' + Math.random().toString(36).substring(2) + '-' + Date.now()
-    localStorage.setItem('auth_token', mockToken)
-
-    getAllInformations()
   } catch (err: any) {
-    errorMsg.value = err?.message || 'Erreur lors de la connexion'
+    if (err.message === 'Failed to fetch') {
+      errorMsg.value = 'Le serveur API n\'est pas accessible. Veuillez vérifier que le serveur est lancé.'
+    } else {
+      errorMsg.value = err?.message || 'Erreur lors de la connexion'
+    }
   } finally {
     loading.value = false
   }

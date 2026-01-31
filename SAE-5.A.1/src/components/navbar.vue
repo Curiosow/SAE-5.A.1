@@ -1,40 +1,39 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 
 const open = ref(false)
 const scrolled = ref(false)
 const router = useRouter()
+const route = useRoute() // Pour gérer l'état actif
 
 const firstName = ref<string | null>(null)
 const account_type = ref<string | null>(null)
 
 const onScroll = () => {
-  scrolled.value = window.scrollY > 6
+  scrolled.value = window.scrollY > 10
 }
 
 const handleLogout = () => {
   console.log('Déconnexion en cours...')
-
-  localStorage.removeItem('auth_token')
-  localStorage.removeItem('account_type')
-  localStorage.removeItem('last_name')
-  localStorage.removeItem('first_name')
-  localStorage.removeItem('email')
-
+  localStorage.clear()
   open.value = false
-
   router.push('/login')
 }
 
 onMounted(() => {
-  firstName.value = typeof window !== 'undefined' ? localStorage.getItem('first_name') : null
-  account_type.value = typeof window !== 'undefined' ? localStorage.getItem('account_type') : null
-  onScroll()
-  window.addEventListener('scroll', onScroll, { passive: true })
+  if (typeof window !== 'undefined') {
+    firstName.value = localStorage.getItem('first_name')
+    account_type.value = localStorage.getItem('account_type')
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+  }
 })
+
 onBeforeUnmount(() => {
-  window.removeEventListener('scroll', onScroll)
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('scroll', onScroll)
+  }
 })
 
 const globalItems = [
@@ -43,244 +42,196 @@ const globalItems = [
 
 const coachItems = [
   { label: 'Joueuses', href: '/joueuses' },
-  { label: 'Téléverser un match', href: '/match' },
   { label: 'Matchs', href: '/comparaison' },
+  { label: 'Objectifs', href: '/Objectifs' }, // Ajout du lien
+  { label: 'Téléverser', href: '/match' },
   { label: 'Gestion', href: '/gestion' },
   { label: 'Heatmaps', href: '/heatmap' },
 ]
 
 const playerItems = [
-  { label: 'Vous', href: '/joueuseprofil' },
+  { label: 'Mon Profil', href: '/joueuseprofil' },
+  { label: 'Mes Objectifs', href: '/Objectifs' }, // Ajout pour la joueuse aussi
 ]
 
 const isCoach = computed(() => account_type.value === 'coach')
 const isPlayer = computed(() => account_type.value === 'player')
+
+// Fonction pour vérifier si le lien est actif
+const isActive = (path: string) => route.path === path
 </script>
 
 <template>
-  <header class="fixed inset-x-0 top-0 z-50">
+  <header class="fixed inset-x-0 top-0 z-50 transition-all duration-500" :class="scrolled ? 'pt-0' : 'pt-4'">
     <div
-        class="liquid-glass mx-auto mt-3 w-[min(94%,1200px)] rounded-2xl px-4 sm:px-6"
-        :class="scrolled ? 'glass-scrolled' : 'glass-top'"
-        role="navigation"
-        aria-label="Global"
+        class="mx-auto transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        :class="[
+          scrolled
+            ? 'w-full rounded-none bg-white/90 backdrop-blur-xl shadow-sm border-b border-gray-100 py-2'
+            : 'w-[min(94%,1200px)] rounded-full bg-white/70 backdrop-blur-md border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] py-3'
+        ]"
     >
-      <nav class="flex h-14 items-center justify-between">
-        <div class="flex min-w-0 flex-1 items-center gap-3">
-          <router-link
-              to="/"
-              class="shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-xl"
-          >
-            <img
-                src="/Sambre-Avesnois-Logo-1-e1739525613932.png"
-                alt="Sambre Avesnois Handball"
-                class="h-8 w-auto"
-                loading="eager"
-                decoding="async"
-            />
-          </router-link>
+      <div class="px-4 sm:px-6">
+        <nav class="flex h-10 items-center justify-between">
 
-          <span class="hidden sm:inline-block h-5 w-px bg-white/10"></span>
+          <div class="flex items-center gap-3">
+            <router-link to="/" class="shrink-0 group relative" @click="open = false">
+              <div class="absolute inset-0 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+              <img
+                  src="/Sambre-Avesnois-Logo-1-e1739525613932.png"
+                  alt="Logo"
+                  class="h-9 w-auto relative z-10 transition-transform group-hover:scale-105"
+              />
+            </router-link>
 
-          <span class="hidden min-w-0 truncate text-sm text-white/70 sm:block">
-            Dashboard Handball - Bienvenue {{ firstName }}
-          </span>
-        </div>
+            <div class="hidden sm:flex flex-col leading-none">
+              <span class="text-xs font-bold text-gray-900 tracking-wide">SAMBRE AVESNOIS</span>
+              <span class="text-[10px] font-medium text-gray-500">
+                Bonjour, <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 font-bold">{{ firstName }}</span>
+              </span>
+            </div>
+          </div>
 
-        <div class="hidden lg:flex items-center gap-3">
-          <router-link
-              v-for="item in globalItems"
-              :key="'global-' + item.label"
-              :to="item.href"
-              class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
-          >
-            <span class="relative z-[1]">{{ item.label }}</span>
-          </router-link>
-
-          <span v-if="isCoach && coachItems.length" class="hidden sm:inline-block h-5 w-px bg-white/10"></span>
-
-          <router-link
-              v-if="isCoach"
-              v-for="item in coachItems"
-              :key="'coach-' + item.label"
-              :to="item.href"
-              class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
-          >
-            <span class="relative z-[1]">{{ item.label }}</span>
-          </router-link>
-
-          <span v-if="isPlayer && playerItems.length" class="hidden sm:inline-block h-5 w-px bg-white/10"></span>
-
-          <router-link
-              v-if="isPlayer"
-              v-for="item in playerItems"
-              :key="'player-' + item.label"
-              :to="item.href"
-              class="seg-link relative text-sm font-medium text-white/90 transition-colors px-3 py-1.5 rounded-full"
-          >
-            <span class="relative z-[1]">{{ item.label }}</span>
-          </router-link>
-        </div>
-
-        <div class="hidden lg:flex min-w-0 flex-1 justify-end items-center gap-3">
-          <button
-              @click="handleLogout"
-              class="rounded-xl bg-white/10 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-sm
-                   ring-1 ring-white/15 hover:bg-white/15 hover:text-rose-200 transition"
-          >
-            Déconnexion
-          </button>
-        </div>
-
-        <button
-            type="button"
-            class="lg:hidden inline-flex items-center justify-center rounded-xl p-2 text-white hover:bg-white/10
-                 ring-1 ring-white/15 backdrop-blur-sm transition"
-            :aria-expanded="open"
-            aria-controls="mobile-menu"
-            @click="open = !open"
-        >
-          <span class="sr-only">Ouvrir le menu</span>
-          <svg v-if="!open" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="1.5" class="size-6">
-            <path d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <svg v-else xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="1.5" class="size-6">
-            <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-      </nav>
-    </div>
-
-    <div
-        class="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px] transition-opacity lg:hidden"
-        :class="open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'"
-        @click="open = false"
-        aria-hidden="true"
-    />
-
-    <div
-        id="mobile-menu"
-        class="fixed right-0 top-0 z-50 h-full w-full max-w-sm p-4 sm:p-6
-             transition-transform duration-300 ease-out lg:hidden"
-        :class="open ? 'translate-x-0' : 'translate-x-full'"
-        role="dialog"
-        aria-modal="true"
-    >
-      <div class="liquid-glass h-full rounded-l-2xl p-6 glass-scrolled flex flex-col">
-        <div class="flex items-center justify-between">
-          <router-link
-              to="/"
-              class="focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60 rounded-xl"
-              @click="open = false"
-          >
-            <img
-                src="/Sambre-Avesnois-Logo-1-e1739525613932.png"
-                alt="Sambre Avesnois Handball"
-                class="h-8 w-auto"
-                loading="eager"
-                decoding="async"
-            />
-          </router-link>
-          <button
-              type="button"
-              class="inline-flex items-center justify-center rounded-xl p-2 text-white hover:bg-white/10
-                   ring-1 ring-white/15 backdrop-blur-sm transition"
-              @click="open = false"
-          >
-            <span class="sr-only">Fermer</span>
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="1.5" class="size-6">
-              <path d="M6 18 18 6M6 6l12 12" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-        </div>
-
-        <div class="mt-8 space-y-2 flex-1">
-          <div class="space-y-2">
+          <div class="hidden lg:flex items-center gap-1 bg-gray-100/50 p-1 rounded-full border border-gray-200/50">
             <router-link
                 v-for="item in globalItems"
-                :key="'global-' + item.label"
+                :key="item.label"
                 :to="item.href"
-                class="seg-link block relative text-base font-medium text-white/90 transition-colors px-4 py-2 rounded-full w-full"
-                @click="open = false"
+                class="relative px-4 py-1.5 text-xs font-bold rounded-full transition-all duration-300"
+                :class="isActive(item.href) ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-purple-600 hover:bg-white/50'"
             >
-              <span class="relative z-[1]">{{ item.label }}</span>
+              {{ item.label }}
             </router-link>
-          </div>
 
-          <div v-if="isCoach" class="space-y-2 pt-4 border-t border-white/10">
+            <div v-if="isCoach" class="w-px h-4 bg-gray-300 mx-1"></div>
+
             <router-link
+                v-if="isCoach"
                 v-for="item in coachItems"
-                :key="'coach-' + item.label"
+                :key="item.label"
                 :to="item.href"
-                class="seg-link block relative text-base font-medium text-white/90 transition-colors px-4 py-2 rounded-full w-full"
-                @click="open = false"
+                class="relative px-4 py-1.5 text-xs font-bold rounded-full transition-all duration-300"
+                :class="isActive(item.href) ? 'bg-white text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 shadow-sm ring-1 ring-black/5' : 'text-gray-500 hover:text-purple-600 hover:bg-white/50'"
             >
-              <span class="relative z-[1]">{{ item.label }}</span>
+              {{ item.label }}
             </router-link>
-          </div>
 
-          <div v-if="isPlayer" class="space-y-2 pt-4 border-t border-white/10">
             <router-link
+                v-if="isPlayer"
                 v-for="item in playerItems"
-                :key="'player-' + item.label"
+                :key="item.label"
                 :to="item.href"
-                class="seg-link block relative text-base font-medium text-white/90 transition-colors px-4 py-2 rounded-full w-full"
-                @click="open = false"
+                class="relative px-4 py-1.5 text-xs font-bold rounded-full transition-all duration-300"
+                :class="isActive(item.href) ? 'bg-white text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-purple-600 shadow-sm ring-1 ring-black/5' : 'text-gray-500 hover:text-purple-600 hover:bg-white/50'"
             >
-              <span class="relative z-[1]">{{ item.label }}</span>
+              {{ item.label }}
             </router-link>
           </div>
+
+          <div class="hidden lg:flex items-center gap-3">
+            <button
+                @click="handleLogout"
+                class="group flex items-center gap-2 px-4 py-1.5 rounded-full border border-red-100 bg-red-50/50 text-xs font-bold text-red-600 hover:bg-red-100 hover:pr-5 transition-all duration-300"
+            >
+              <span>Déconnexion</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+            </button>
+          </div>
+
+          <button
+              type="button"
+              class="lg:hidden p-2 text-gray-500 hover:text-purple-600 transition-colors"
+              @click="open = !open"
+          >
+            <div class="w-6 h-5 relative flex flex-col justify-between">
+              <span class="w-full h-0.5 bg-current rounded-full transition-all duration-300 origin-left" :class="open ? 'rotate-45 translate-x-0.5' : ''"></span>
+              <span class="w-full h-0.5 bg-current rounded-full transition-all duration-300" :class="open ? 'opacity-0' : ''"></span>
+              <span class="w-full h-0.5 bg-current rounded-full transition-all duration-300 origin-left" :class="open ? '-rotate-45 translate-x-0.5' : ''"></span>
+            </div>
+          </button>
+        </nav>
+      </div>
+    </div>
+
+    <Transition
+        enter-active-class="transition duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+      <div v-if="open" class="fixed inset-0 z-40 bg-gray-900/20 backdrop-blur-sm lg:hidden" @click="open = false"></div>
+    </Transition>
+
+    <div
+        class="fixed top-0 right-0 z-50 h-full w-[280px] bg-white shadow-2xl transform transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] lg:hidden flex flex-col"
+        :class="open ? 'translate-x-0' : 'translate-x-full'"
+    >
+      <div class="p-6 border-b border-gray-100 flex items-center justify-between">
+        <span class="text-sm font-bold text-gray-900">Menu</span>
+        <button @click="open = false" class="text-gray-400 hover:text-gray-900">✕</button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto py-6 px-4 space-y-1">
+        <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-4">Navigation</p>
+
+        <router-link
+            v-for="item in globalItems"
+            :key="item.href"
+            :to="item.href"
+            @click="open = false"
+            class="block px-4 py-3 rounded-xl text-sm font-medium transition-all"
+            :class="isActive(item.href) ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50'"
+        >
+          {{ item.label }}
+        </router-link>
+
+        <div v-if="isCoach" class="pt-4 mt-4 border-t border-gray-100">
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-4">Espace Coach</p>
+          <router-link
+              v-for="item in coachItems"
+              :key="item.href"
+              :to="item.href"
+              @click="open = false"
+              class="block px-4 py-3 rounded-xl text-sm font-medium transition-all"
+              :class="isActive(item.href) ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50'"
+          >
+            {{ item.label }}
+          </router-link>
         </div>
 
-        <div class="mt-8 border-t border-white/10 pt-6">
-          <button
-              @click="handleLogout"
-              class="w-full block rounded-xl bg-white/10 px-4 py-3 text-base font-semibold text-white
-                   backdrop-blur-sm ring-1 ring-white/15 hover:bg-white/15 hover:text-rose-200 transition text-left"
+        <div v-if="isPlayer" class="pt-4 mt-4 border-t border-gray-100">
+          <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 px-4">Espace Joueuse</p>
+          <router-link
+              v-for="item in playerItems"
+              :key="item.href"
+              :to="item.href"
+              @click="open = false"
+              class="block px-4 py-3 rounded-xl text-sm font-medium transition-all"
+              :class="isActive(item.href) ? 'bg-purple-50 text-purple-700' : 'text-gray-600 hover:bg-gray-50'"
           >
-            Déconnexion
-          </button>
+            {{ item.label }}
+          </router-link>
         </div>
+      </div>
+
+      <div class="p-6 border-t border-gray-100 bg-gray-50/50">
+        <button
+            @click="handleLogout"
+            class="w-full flex items-center justify-center gap-2 bg-white border border-red-100 text-red-600 font-bold py-3 rounded-xl hover:bg-red-50 transition-all text-sm shadow-sm"
+        >
+          Déconnexion
+        </button>
       </div>
     </div>
   </header>
 </template>
 
 <style scoped>
-/* ✅ mêmes styles que ton code original */
-.liquid-glass {
-  position: relative;
-  background: rgba(20, 20, 22, 0.18);
-  backdrop-filter: blur(18px) saturate(120%);
-  -webkit-backdrop-filter: blur(18px) saturate(120%);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.35),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
-.glass-top { background: rgba(20, 20, 22, 0.14); border-color: rgba(255, 255, 255, 0.10); }
-.glass-scrolled { background: rgba(20, 20, 22, 0.22); border-color: rgba(255, 255, 255, 0.14); }
-.seg-link { position: relative; border-radius: 9999px; transition: color .25s ease, transform .25s ease; }
-.seg-link::before {
-  content: "";
-  position: absolute; inset: -2px; border-radius: inherit;
-  background: rgba(255, 255, 255, 0.01);
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 4px 16px rgba(0, 0, 0, 0.30);
-  opacity: 0;
-  transform: translateZ(0) scale(0.98);
-  transition: opacity .25s ease, transform .25s ease, box-shadow .25s ease, border-color .25s ease;
-  z-index: 0;
-}
-.seg-link:hover::before {
-  opacity: 1;
-  transform: translateZ(0) scale(1);
-  border-color: rgba(255, 255, 255, 0.22);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), 0 6px 22px rgba(0, 0, 0, 0.35);
-}
+/* Pas besoin de CSS custom complexe, Tailwind gère tout. */
+/* Juste un petit fix pour la scrollbar si besoin */
+::-webkit-scrollbar { width: 0px; }
 </style>

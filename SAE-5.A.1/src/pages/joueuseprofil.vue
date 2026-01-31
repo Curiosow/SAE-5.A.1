@@ -246,14 +246,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, defineAsyncComponent } from 'vue'
 import {
   Chart as ChartJS,
   registerables,
   type ChartData,
   type ChartOptions
 } from 'chart.js'
-import { Bar, Doughnut, Radar } from 'vue-chartjs'
+
+const Bar = defineAsyncComponent(() => import('vue-chartjs').then(m => m.Bar))
+const Doughnut = defineAsyncComponent(() => import('vue-chartjs').then(m => m.Doughnut))
+const Radar = defineAsyncComponent(() => import('vue-chartjs').then(m => m.Radar))
 
 ChartJS.register(...registerables)
 

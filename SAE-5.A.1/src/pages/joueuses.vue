@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { usePlayerStats } from '../composables/usePlayerStats'
+import { usePlayerStats } from '../../composables/usePlayerStats'
 import PlayerHeader from '../components/player/PlayerHeader.vue'
 import PlayerStats from '../components/player/PlayerStats.vue'
 import PlayerCharts from '../components/player/PlayerCharts.vue'

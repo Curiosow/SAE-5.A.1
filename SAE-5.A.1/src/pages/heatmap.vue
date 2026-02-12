@@ -1,18 +1,23 @@
 <template>
   <main class="min-h-screen bg-[#F0F2F5] font-sans text-slate-900">
-    <div class="mx-auto max-w-[1200px] px-4 sm:px-6 lg:px-8 pt-12 pb-16">
+    <div class="mx-auto max-w-[1400px] px-4 sm:px-6 lg:px-8 pt-24 pb-16">
 
-      <header class="mb-8 flex justify-between items-end">
-        <div>
-          <br>
-
+      <header class="mb-6 flex flex-col items-center text-center">
+        <h1 class="text-3xl font-black text-slate-800 tracking-tighter uppercase">
+          Analyse Tactique
+        </h1>
+        <div class="mt-2 flex items-center gap-2">
+          <span class="h-1 w-12 bg-[#925271] rounded-full"></span>
+          <p class="text-xs text-slate-500 font-bold uppercase tracking-widest">
+            Visualisation des zones d'impact
+          </p>
+          <span class="h-1 w-12 bg-[#925271] rounded-full"></span>
         </div>
-
       </header>
 
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_360px] gap-8 items-start">
 
-        <section class="relative bg-white rounded-3xl shadow-xl shadow-slate-200/60 overflow-hidden border border-white">
+        <section class="relative bg-white rounded-3xl shadow-xl shadow-slate-200/60 overflow-hidden border border-white h-fit">
           <transition name="fade">
             <div v-if="isLoading" class="absolute inset-0 z-30 bg-white/90 backdrop-blur-sm flex items-center justify-center">
               <div class="flex flex-col items-center gap-4">
@@ -22,8 +27,8 @@
             </div>
           </transition>
 
-          <div class="p-4 sm:p-8 flex items-center justify-center min-h-[500px]">
-            <div class="relative w-full max-w-[900px] rounded-2xl overflow-hidden border border-slate-200 shadow-2xl bg-slate-50" ref="heatmapContainer">
+          <div class="p-4 sm:p-8 flex items-center justify-center">
+            <div class="relative w-full rounded-2xl overflow-hidden border border-slate-200 shadow-2xl bg-slate-50" ref="heatmapContainer">
 
               <img src="/Terrain de basketball minimaliste.png"
                    alt="Terrain"
@@ -33,8 +38,13 @@
                    class="absolute transform -translate-x-1/2 -translate-y-1/2 z-10 flex items-center justify-center group"
                    :style="{ top: zone.y + '%', left: zone.x + '%' }">
 
-                <div class="rounded-full transition-all duration-700 ease-out blur-md mix-blend-multiply cursor-pointer group-hover:scale-125 group-hover:blur-sm"
+                <div class="rounded-full transition-all duration-700 ease-out cursor-pointer group-hover:scale-125"
+                     :class="zone.isDummy ? 'z-20 border-2 border-white shadow-[0_0_10px_rgba(79,70,229,0.8)]' : 'blur-md mix-blend-multiply group-hover:blur-sm'"
                      :style="getStyle(zone)">
+                </div>
+
+                <div v-if="showAllZones && zone.isDummy" class="absolute pointer-events-none text-[8px] font-black text-indigo-600 bg-white/90 px-1.5 py-0.5 rounded shadow-sm uppercase whitespace-nowrap translate-y-7 z-30 border border-indigo-100">
+                  {{ zone.label }}
                 </div>
 
                 <div class="opacity-0 group-hover:opacity-100 absolute mb-4 bottom-full pointer-events-none transition-all duration-300 translate-y-2 group-hover:translate-y-0 z-[60]">
@@ -42,7 +52,7 @@
                     <div class="text-[9px] text-slate-400 uppercase font-black mb-1 tracking-tighter">{{ zone.label }}</div>
                     <div class="flex justify-between items-end gap-4">
                       <span class="text-2xl font-light">{{ zone.count }}<span class="text-[10px] ml-1 text-slate-400">actions</span></span>
-                      <div v-if="zone.goals > 0" class="text-right">
+                      <div v-if="zone.count > 0 && zone.goals > 0" class="text-right">
                         <div class="text-[10px] font-bold" :class="selectedContext === 'attack' ? 'text-emerald-400' : 'text-rose-400'">
                           {{ Math.round((zone.goals / zone.count) * 100) }}% eff.
                         </div>
@@ -66,8 +76,8 @@
           </div>
         </section>
 
-        <aside class="space-y-6">
-          <div class="bg-white p-6 rounded-3xl shadow-xl shadow-slate-200/60 border border-white sticky top-12">
+        <aside class="space-y-6 self-start">
+          <div class="bg-white p-6 rounded-3xl shadow-xl shadow-slate-200/60 border border-white sticky top-8">
             <h2 class="text-sm font-black text-slate-800 uppercase tracking-widest mb-6 flex items-center gap-2">
               <span class="w-1.5 h-1.5 bg-rose-500 rounded-full"></span>
               Configuration
@@ -123,6 +133,20 @@
                 </div>
               </div>
 
+              <div class="pt-4 border-t border-slate-100">
+                <label class="flex items-center cursor-pointer group">
+                  <div class="relative">
+                    <input type="checkbox" v-model="showAllZones" class="sr-only">
+                    <div class="w-10 h-5 bg-slate-200 rounded-full shadow-inner transition-colors" :class="showAllZones ? 'bg-indigo-600' : 'bg-slate-200'"></div>
+                    <div class="absolute -left-1 -top-1 w-7 h-7 bg-white rounded-full shadow border border-slate-200 transition-transform" :class="showAllZones ? 'translate-x-5 border-indigo-600' : 'translate-x-0'"></div>
+                  </div>
+                  <div class="ml-3">
+                    <span class="text-[10px] font-black text-indigo-600 uppercase tracking-widest leading-none">Debug Mode</span>
+                    <p class="text-[8px] text-slate-400 font-bold uppercase tracking-tighter">Afficher tous les secteurs</p>
+                  </div>
+                </label>
+              </div>
+
               <div class="pt-6 border-t border-slate-100">
                 <div class="flex items-center justify-between mb-4">
                   <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Densité d'actions</span>
@@ -139,7 +163,7 @@
                   <span>Élevée</span>
                 </div>
 
-                <div v-if="unmappedCount > 0" class="bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold border border-amber-200 animate-pulse">
+                <div v-if="unmappedCount > 0" class="mt-4 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold border border-amber-200 animate-pulse">
                   ⚠️ {{ unmappedCount }} ACTIONS HORS-ZONE
                 </div>
               </div>
@@ -156,7 +180,6 @@ import { ref, computed, onMounted } from 'vue'
 
 const apiUrl = useApiUrl()
 
-// --- Types & Config ---
 type GameContext = 'attack' | 'defense';
 type ShotResult = 'But' | 'Echec' | 'Pertes' | '';
 
@@ -184,11 +207,11 @@ const ZONE_MAPPING: Record<string, {x: number, y: number, label: string}> = {
   "ER": { x: 70, y: 91, label: "Engagement Rapide" },
 };
 
-// --- State ---
 const allEvents = ref<HandballEvent[]>([])
 const matches = ref<any[]>([])
 const isLoading = ref(false)
 const unmappedCount = ref(0)
+const showAllZones = ref(false)
 
 const selectedPlayer = ref('')
 const selectedResult = ref<ShotResult>('')
@@ -196,13 +219,9 @@ const selectedContext = ref<GameContext>('attack')
 const selectedMatchId = ref<number | null>(null)
 
 const filterOptions = [
-  { v: '', l: 'Tout' },
-  { v: 'But', l: 'Buts' },
-  { v: 'Echec', l: 'Échecs' },
-  { v: 'Pertes', l: 'Pertes' }
+  { v: '', l: 'Tout' }, { v: 'But', l: 'Buts' }, { v: 'Echec', l: 'Échecs' }, { v: 'Pertes', l: 'Pertes' }
 ] as { v: ShotResult, l: string }[]
 
-// --- Logic ---
 function normalizeZone(rawZone: string): string | null {
   if (!rawZone) return null;
   const z = rawZone.trim();
@@ -219,7 +238,6 @@ function normalizeZone(rawZone: string): string | null {
   if (z.includes("Ext D") || z.includes("9m D")) return "9m D";
   if (z.includes("ALG")) return "ALG";
   if (z.includes("ALD")) return "ALD";
-
   const sectors = ["1 2", "2 3", "3 4", "4 5", "5 6", "Zone"];
   return sectors.find(s => z.includes(s)) || null;
 }
@@ -227,19 +245,15 @@ function normalizeZone(rawZone: string): string | null {
 const filteredEvents = computed(() => {
   const atkKeys = ["Att", "ER", "CA", "Transition", "But vide"];
   const defKeys = ["Déf", "0-6", "1-5", "Repli"];
-
   return allEvents.value.filter(e => {
     if (selectedMatchId.value !== null && e.matchId !== selectedMatchId.value) return false;
     const nom = e.nom || "";
     const isAtk = atkKeys.some(k => nom.startsWith(k)) || (nom.includes("7m") && !nom.includes("Adversaire"));
     const isDef = defKeys.some(k => nom.startsWith(k)) || nom.includes("Adversaire");
-
     if (selectedContext.value === 'attack' ? !isAtk : !isDef) return false;
     if (selectedPlayer.value && e.joueuse !== selectedPlayer.value) return false;
-
     const isGoal = e.resultat === 'But';
     const isTurnover = ['PDB', 'Marcher', 'Passage en force'].includes(e.resultat) || (selectedResult.value === 'Pertes' && e.lieupb);
-
     if (selectedResult.value === 'But' && !isGoal) return false;
     if (selectedResult.value === 'Echec' && (isGoal || isTurnover)) return false;
     if (selectedResult.value === 'Pertes' && !isTurnover) return false;
@@ -260,23 +274,33 @@ const playersList = computed(() => {
 const heatmapPoints = computed(() => {
   const map: Record<string, any> = {};
   let maxVal = 0; let unmapped = 0;
-
+  if (showAllZones.value) {
+    Object.keys(ZONE_MAPPING).forEach(key => {
+      map[key] = { ...ZONE_MAPPING[key], count: 0, goals: 0, isDummy: true };
+    });
+  }
   filteredEvents.value.forEach(e => {
     const key = normalizeZone(selectedResult.value === 'Pertes' ? e.lieupb : e.secteur);
     if (key && ZONE_MAPPING[key]) {
       if (!map[key]) map[key] = { ...ZONE_MAPPING[key], count: 0, goals: 0 };
       map[key].count++;
       if (e.resultat === 'But') map[key].goals++;
+      map[key].isDummy = false;
       maxVal = Math.max(maxVal, map[key].count);
     } else if (e.secteur || e.lieupb) { unmapped++; }
   });
-
   unmappedCount.value = unmapped;
   const finalMax = maxVal || 1;
   return Object.values(map).map(p => ({ ...p, max: finalMax }));
 })
 
 function getStyle(zone: any) {
+  if (zone.isDummy && zone.count === 0) {
+    return {
+      width: '20px', height: '20px', backgroundColor: '#4f46e5',
+      border: '2px solid #ffffff', boxShadow: '0 0 10px rgba(79, 70, 229, 0.6)', opacity: '1'
+    }
+  }
   const ratio = Math.log(zone.count + 1) / Math.log(zone.max + 1);
   const size = 30 + (ratio * 36);
   const hue = selectedContext.value === 'attack' ? (1 - ratio) * 150 + 20 : ratio * 30;

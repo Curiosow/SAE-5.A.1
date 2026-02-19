@@ -87,22 +87,6 @@
               </div>
 
               <div>
-                <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Période Critique</label>
-                <button @click="showOnlyMoneyTime = !showOnlyMoneyTime"
-                        class="w-full flex items-center justify-between p-3 rounded-xl border transition-all"
-                        :class="showOnlyMoneyTime ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500'">
-                  <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold uppercase tracking-widest">Money Time</span>
-                    <span v-if="showOnlyMoneyTime" class="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
-                  </div>
-                  <div class="relative w-8 h-4 bg-slate-200 rounded-full transition-colors" :class="{'bg-amber-400': showOnlyMoneyTime}">
-                    <div class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform"
-                         :style="{ transform: showOnlyMoneyTime ? 'translateX(16px)' : 'translateX(0)' }"></div>
-                  </div>
-                </button>
-              </div>
-
-              <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Match sélectionné</label>
                 <select v-model="selectedMatchId" class="custom-select">
                   <option :value="null">Tous les matchs (Global)</option>
@@ -151,6 +135,23 @@
                   </button>
                 </div>
               </div>
+
+              <div class="pt-6 border-t border-slate-100">
+                <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest text-amber-600">Filtre Avancé</label>
+                <button @click="showOnlyMoneyTime = !showOnlyMoneyTime"
+                        class="w-full flex items-center justify-between p-3 rounded-xl border transition-all"
+                        :class="showOnlyMoneyTime ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-slate-300'">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Money Time</span>
+                    <span v-if="showOnlyMoneyTime" class="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+                  </div>
+                  <div class="relative w-8 h-4 bg-slate-200 rounded-full transition-colors" :class="{'bg-amber-400': showOnlyMoneyTime}">
+                    <div class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform"
+                         :style="{ transform: showOnlyMoneyTime ? 'translateX(16px)' : 'translateX(0)' }"></div>
+                  </div>
+                </button>
+              </div>
+
             </div>
           </div>
         </aside>
@@ -168,7 +169,6 @@ const apiUrl = useApiUrl()
 const OUR_TEAM_ID = "e2a4c7b1-9f3d-4e6a-8b2c-7d1e5f4c3a2b";
 const ADV_TEAM_ID = "c6f3d2a4-8b12-4e77-9a3b-5d2f0c8e1a4b";
 
-// --- CONFIG FILTRES ---
 const ATK_KEYS = ["Att", "ER", "CA", "Transition", "But vide"];
 const DEF_KEYS = ["Déf", "0-6", "1-5", "Repli"];
 const TURNOVER_RESULTS = ['PDB', 'Marcher', 'Passage en force'];
@@ -211,6 +211,7 @@ const allPlayers = ref<Player[]>([])
 const allPositions = ref<Position[]>([])
 const matches = ref<any[]>([])
 const isLoading = ref(false)
+
 const selectedTeam = ref(OUR_TEAM_ID);
 const selectedPlayer = ref('')
 const selectedResult = ref<ShotResult>('')
@@ -254,6 +255,7 @@ const filteredEvents = computed(() => {
     if (selectedMatchId.value !== null && String(eventMatchId) !== String(selectedMatchId.value)) return false;
     if (e.team_id !== selectedTeam.value) return false;
 
+    // Filtre Money Time
     if (showOnlyMoneyTime.value) {
       const isMoneyTime = e.money_time === true || e.money_time === "true" || e.money_time === 1;
       if (!isMoneyTime) return false;

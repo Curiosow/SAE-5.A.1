@@ -87,6 +87,22 @@
               </div>
 
               <div>
+                <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Période Critique</label>
+                <button @click="showOnlyMoneyTime = !showOnlyMoneyTime"
+                        class="w-full flex items-center justify-between p-3 rounded-xl border transition-all"
+                        :class="showOnlyMoneyTime ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500'">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] font-bold uppercase tracking-widest">Money Time</span>
+                    <span v-if="showOnlyMoneyTime" class="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+                  </div>
+                  <div class="relative w-8 h-4 bg-slate-200 rounded-full transition-colors" :class="{'bg-amber-400': showOnlyMoneyTime}">
+                    <div class="absolute top-0.5 left-0.5 w-3 h-3 bg-white rounded-full transition-transform"
+                         :style="{ transform: showOnlyMoneyTime ? 'translateX(16px)' : 'translateX(0)' }"></div>
+                  </div>
+                </button>
+              </div>
+
+              <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">Match sélectionné</label>
                 <select v-model="selectedMatchId" class="custom-select">
                   <option :value="null">Tous les matchs (Global)</option>
@@ -135,24 +151,6 @@
                   </button>
                 </div>
               </div>
-
-              <div class="pt-6 border-t border-slate-100 space-y-4">
-                <div class="flex justify-between items-end">
-                  <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Volume total</span>
-                  <span class="text-xl font-black">{{ filteredEvents.length }}</span>
-                </div>
-                <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <div class="flex justify-between items-center mb-1">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Efficacité</span>
-                    <span class="text-sm font-black" :class="selectedContext === 'attack' ? 'text-emerald-600' : 'text-rose-600'">
-                      {{ totalEfficiency }}%
-                    </span>
-                  </div>
-                  <div class="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
-                    <div class="h-full bg-slate-900 transition-all duration-1000" :style="{ width: totalEfficiency + '%' }"></div>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </aside>
@@ -178,7 +176,17 @@ const TURNOVER_RESULTS = ['PDB', 'Marcher', 'Passage en force'];
 type GameContext = 'attack' | 'defense';
 type ShotResult = 'But' | 'Echec' | 'Pertes' | '';
 
-interface HandballEvent { nom: string; resultat: string; secteur: string; joueuse: string; lieupb: string; matchId?: number | string; match_id?: number | string; team_id: string; }
+interface HandballEvent {
+  nom: string;
+  resultat: string;
+  secteur: string;
+  joueuse: string;
+  lieupb: string;
+  matchId?: number | string;
+  match_id?: number | string;
+  team_id: string;
+  money_time?: boolean | string | number;
+}
 interface Player { id: string; first_name: string; team_id: string; }
 interface Position { player_id: string; name: string; }
 
@@ -202,69 +210,54 @@ const allEvents = ref<HandballEvent[]>([])
 const allPlayers = ref<Player[]>([])
 const allPositions = ref<Position[]>([])
 const matches = ref<any[]>([])
-
 const isLoading = ref(false)
-
 const selectedTeam = ref(OUR_TEAM_ID);
 const selectedPlayer = ref('')
 const selectedResult = ref<ShotResult>('')
 const selectedContext = ref<GameContext>('attack')
-
 const selectedMatchId = ref<number | string | null>(null);
+const showOnlyMoneyTime = ref(false);
 
-// --- LOGIQUE GARDIENNES (BDD + EN DUR) ---
-
+// --- LOGIQUE GARDIENNES ---
 const goalkeepersList = computed(() => {
   let gks = ["alix", "justicia", "adv_13", "adv_14"];
-
   if (allPositions.value.length > 0 && allPlayers.value.length > 0) {
     const gkIds = allPositions.value
         .filter(pos => pos.name === "GARDIENNE")
         .map(pos => pos.player_id);
-
     const dbGks = allPlayers.value
         .filter(p => gkIds.includes(p.id))
         .map(p => p.first_name.trim().toLowerCase());
-
     gks = [...new Set([...dbGks, "adv_13", "adv_14"])];
   }
-
   return gks;
 });
 
 const playersList = computed(() => {
   const names = new Set<string>();
-
   allEvents.value.forEach(e => {
     const eventMatchId = e.matchId || e.match_id;
     if (selectedMatchId.value !== null && String(eventMatchId) !== String(selectedMatchId.value)) return;
-
     if (e.team_id === selectedTeam.value && e.joueuse) {
       const playerNameRaw = e.joueuse.trim();
-      const playerNameLower = playerNameRaw.toLowerCase();
-
-      const isGk = goalkeepersList.value.includes(playerNameLower);
-
-      if (selectedContext.value === 'defense') {
-        if (isGk) names.add(playerNameRaw);
-      }
-      else {
-        if (!isGk) names.add(playerNameRaw);
-      }
+      const isGk = goalkeepersList.value.includes(playerNameRaw.toLowerCase());
+      if (selectedContext.value === 'defense' ? isGk : !isGk) names.add(playerNameRaw);
     }
   });
-
   return Array.from(names).sort();
 })
 
-// --- LOGIQUE FILTRAGE DES EVENEMENTS ---
-
+// --- LOGIQUE FILTRAGE ---
 const filteredEvents = computed(() => {
   return allEvents.value.filter(e => {
     const eventMatchId = e.matchId || e.match_id;
     if (selectedMatchId.value !== null && String(eventMatchId) !== String(selectedMatchId.value)) return false;
-
     if (e.team_id !== selectedTeam.value) return false;
+
+    if (showOnlyMoneyTime.value) {
+      const isMoneyTime = e.money_time === true || e.money_time === "true" || e.money_time === 1;
+      if (!isMoneyTime) return false;
+    }
 
     const nom = e.nom || "";
     const isAtk = ATK_KEYS.some(k => nom.includes(k)) || nom.includes("7m");
@@ -272,19 +265,12 @@ const filteredEvents = computed(() => {
 
     if (selectedContext.value === 'attack' ? !isAtk : !isDef) return false;
 
-    if (selectedContext.value === 'attack') {
-      if (e.joueuse) {
-        const playerNameLower = e.joueuse.trim().toLowerCase();
-        if (goalkeepersList.value.includes(playerNameLower)) {
-          return false;
-        }
-      }
+    if (selectedContext.value === 'attack' && e.joueuse) {
+      if (goalkeepersList.value.includes(e.joueuse.trim().toLowerCase())) return false;
     }
 
     if (selectedPlayer.value) {
-      const eventPlayer = e.joueuse?.trim().toLowerCase() || "";
-      const dropdownPlayer = selectedPlayer.value.trim().toLowerCase();
-      if (eventPlayer !== dropdownPlayer) return false;
+      if (e.joueuse?.trim().toLowerCase() !== selectedPlayer.value.trim().toLowerCase()) return false;
     }
 
     const isGoal = e.resultat === 'But';
@@ -296,13 +282,6 @@ const filteredEvents = computed(() => {
     return true;
   })
 })
-
-const totalEfficiency = computed(() => {
-  const total = filteredEvents.value.length;
-  if (total === 0) return 0;
-  const goals = filteredEvents.value.filter(e => e.resultat === 'But').length;
-  return Math.round((goals / total) * 100);
-});
 
 // --- HEATMAP ---
 function normalizeZone(rawZone: string): string | null {
@@ -326,7 +305,6 @@ function normalizeZone(rawZone: string): string | null {
 const heatmapPoints = computed(() => {
   const map: Record<string, any> = {};
   let maxVal = 0;
-
   filteredEvents.value.forEach(e => {
     const key = normalizeZone(e.secteur);
     if (key && ZONE_MAPPING[key]) {
@@ -336,7 +314,6 @@ const heatmapPoints = computed(() => {
       maxVal = Math.max(maxVal, map[key].count);
     }
   });
-
   const finalMax = maxVal || 1;
   return Object.values(map).map(p => ({ ...p, max: finalMax }));
 })
@@ -352,8 +329,6 @@ function getStyle(zone: any) {
   }
 }
 
-// --- APPEL API SECURISÉ ---
-
 async function fetchAllData() {
   isLoading.value = true
   try {
@@ -363,14 +338,12 @@ async function fetchAllData() {
       fetch(`${apiUrl}/players`).catch(() => null),
       fetch(`${apiUrl}/positions2`).catch(() => null)
     ]);
-
-    if (resM && resM.ok) { const json = await resM.json(); matches.value = json.docs || []; }
-    if (resE && resE.ok) { const json = await resE.json(); allEvents.value = json.docs || []; }
-    if (resPl && resPl.ok) { const json = await resPl.json(); allPlayers.value = json.docs || []; }
-    if (resPos && resPos.ok) { const json = await resPos.json(); allPositions.value = json.docs || []; }
-
+    if (resM?.ok) matches.value = (await resM.json()).docs || [];
+    if (resE?.ok) allEvents.value = (await resE.json()).docs || [];
+    if (resPl?.ok) allPlayers.value = (await resPl.json()).docs || [];
+    if (resPos?.ok) allPositions.value = (await resPos.json()).docs || [];
   } catch (e) {
-    console.error("Erreur de récupération BDD:", e);
+    console.error("Erreur BDD:", e);
   } finally {
     isLoading.value = false;
   }

@@ -239,7 +239,7 @@ ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, 
 const Bar = defineAsyncComponent(() => import('vue-chartjs').then(m => m.Bar))
 const Radar = defineAsyncComponent(() => import('vue-chartjs').then(m => m.Radar))
 
-const API_URL = "https://oscarapi.eternyuhc.fr/"
+const API_URL = useApiUrl()
 
 // CONSTANTE INFALLIBLE : C'est cet ID et UNIQUEMENT celui ci qui sert de repère pour Sambre.
 const SAMBRE_TEAM_ID = "e2a4c7b1-9f3d-4e6a-8b2c-7d1e5f4c3a2b"

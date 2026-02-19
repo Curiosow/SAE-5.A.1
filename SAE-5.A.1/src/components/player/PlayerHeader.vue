@@ -1,5 +1,4 @@
 <template>
-  <!--<pre> <pre v-if="player" class="whitespace-pre-wrap">{{ JSON.stringify(player, null, 2) }}</pre></pre>-->
   <header v-if="player" class="relative card-large p-6 sm:p-8 mb-6 bg-white">
     <div class="grid grid-cols-[auto_1fr] gap-6 items-start">
       <div class="relative w-28">

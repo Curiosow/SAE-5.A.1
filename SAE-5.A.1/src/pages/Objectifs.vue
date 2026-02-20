@@ -188,7 +188,7 @@ import { ref, computed, onMounted } from 'vue';
 
 definePageMeta({ ssr: false });
 
-const apiUrl = "http://localhost:8080";
+const apiUrl = useApiUrl();
 
 const isCoach = ref(true);
 const currentTab = ref('matchs');
